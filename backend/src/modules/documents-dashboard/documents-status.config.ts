@@ -1,0 +1,87 @@
+/* ============================================================
+   Documents Status Classification (configurable, pure)
+   จัดกลุ่มค่าสถานะ/ขั้นตอนของงานเอกสาร → in_progress / completed / issues / unclassified
+   - normalize: trim, ลด whitespace, lowercase อังกฤษ, ตัด phinthu ที่พิมพ์เกิน
+   - เทียบ exact ต่อค่า (ไม่ใช้ contains กว้าง)
+   ============================================================ */
+import type { CustomerStatusGroup } from "@tracking-cyd/shared";
+
+export const DOCUMENTS_STATUS_GROUPS: Record<Exclude<CustomerStatusGroup, "unclassified">, string[]> = {
+  in_progress: [
+    "กำลังดำเนินการ",
+    "ดำเนินการเรียบร้อย แต่ยังไม่ปิด",
+    "รอเอกสาร",
+    "รอลูกค้า",
+    "รอตรวจสอบ",
+    "อยู่ระหว่างจัดทำ",
+    "อยู่ระหว่างติดตาม",
+    "in progress",
+    "pending",
+  ],
+  completed: [
+    "ดำเนินการเรียบร้อย",
+    "ดำเนินการเสร็จแล้ว",
+    "เสร็จสิ้น",
+    "ปิดงานแล้ว",
+    "สำเร็จ",
+    "completed",
+    "closed",
+    "done",
+  ],
+  issues: [
+    "เอกสารไม่ครบ",
+    "ติดต่อลูกค้าไม่ได้",
+    "งานล่าช้า",
+    "เกินกำหนด",
+    "ติดปัญหา",
+    "ยกเลิก",
+    "failed",
+    "rejected",
+  ],
+} as const;
+
+export const GROUP_LABELS: Record<CustomerStatusGroup, string> = {
+  in_progress: "กำลังดำเนินการ",
+  completed: "เสร็จสิ้น",
+  issues: "มีปัญหา/ต้องติดตาม",
+  unclassified: "ยังไม่ระบุสถานะ",
+};
+
+export const GROUP_ORDER: CustomerStatusGroup[] = ["in_progress", "completed", "issues", "unclassified"];
+
+export function normalizeStatus(raw: string): string {
+  return (raw ?? "")
+    .toString()
+    .replace(/ฺ/g, "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+const LOOKUP: Map<string, CustomerStatusGroup> = (() => {
+  const map = new Map<string, CustomerStatusGroup>();
+  (Object.entries(DOCUMENTS_STATUS_GROUPS) as [Exclude<CustomerStatusGroup, "unclassified">, string[]][]).forEach(
+    ([group, values]) => {
+      for (const v of values) map.set(normalizeStatus(v), group);
+    },
+  );
+  return map;
+})();
+
+export function classifyStatus(raw: string): CustomerStatusGroup {
+  const norm = normalizeStatus(raw);
+  if (!norm) return "unclassified";
+  return LOOKUP.get(norm) ?? "unclassified";
+}
+
+export function isUnknownStatus(raw: string): boolean {
+  const norm = normalizeStatus(raw);
+  return norm.length > 0 && !LOOKUP.has(norm);
+}
+
+/** normalize ชื่อผู้รับผิดชอบ (รวม typo เช่น "พี่อััง" → "พี่อัง") */
+export function normalizeAssignee(raw: string): string {
+  return (raw ?? "").toString().replace(/ฺ/g, "").trim().replace(/\s+/g, " ")
+    // ยุบสระ/วรรณยุกต์ซ้ำติดกัน (พี่อััง → พี่อัง)
+    .replace(/([ั-ฺ็-๎])\1+/g, "$1");
+}

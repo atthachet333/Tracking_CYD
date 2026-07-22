@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+.DS_Store
+*.log
+npm-debug.log*
+coverage/
+.vite/
+legacy-static/
+
+# ===== Environment & Secrets (ห้าม commit) =====
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Google / Service Account credentials
+*service-account*.json
+*service_account*.json
+**/credentials*.json
+*.pem
+*.key
+gcp-*.json
+GOOGLE_PRIVATE_KEY*

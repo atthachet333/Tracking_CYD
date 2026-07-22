@@ -1,0 +1,16 @@
+{
+  "name": "@tracking-cyd/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/index.ts",
+    "./schemas": "./schemas/index.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}

@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-surface text-ink font-sans antialiased;
+  font-size: 14px;
+}
+
+.dark body {
+  @apply bg-[#0b1220] text-slate-200;
+}
+
+/* number formatting */
+.tnum {
+  font-family: "Inter", "IBM Plex Sans Thai", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-line rounded-full;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700;
+}
+
+/* enterprise header gradient */
+.header-grad {
+  background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
+}
+.dark .header-grad {
+  background: linear-gradient(120deg, #0f1e40 0%, #15306e 60%, #1d4ed8 100%);
+}
+
+/* card surfaces adapt to dark */
+.surface-card {
+  @apply bg-white border border-line rounded-2xl shadow-card;
+}
+.dark .surface-card {
+  @apply bg-[#111a2e] border-slate-800;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: shimmer 1.4s infinite;
+}
+.dark .shimmer::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

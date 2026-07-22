@@ -1,0 +1,20 @@
+// Re-export documents-dashboard + unified tasks contracts จาก shared
+export type {
+  WorkloadLevel,
+  DocumentTaskItem,
+  DocumentsDashboardMeta,
+  DocumentsSummary,
+  DocumentsAssigneeStat,
+  DocumentsCompanyStat,
+  DocumentsSummaryResponse,
+  DocumentsStatusDistributionResponse,
+  DocumentsAssigneesResponse,
+  DocumentsCompaniesResponse,
+  DocumentsItemsResponse,
+  DocumentsRecentResponse,
+  DocumentsTrendsResponse,
+  DocumentsHeadersResponse,
+  TaskDepartment,
+  UnifiedTask,
+  UnifiedTasksResponse,
+} from "@tracking-cyd/shared";

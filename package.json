@@ -1,0 +1,27 @@
+{
+  "name": "tracking-cyd",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CHAIYADET PROGRESS · ระบบภาพรวมทีมงานและแผนก Admin & เอกสาร (Full-Stack Monorepo)",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "lint": "npm run lint --prefix frontend && npm run lint --prefix backend",
+    "test": "npm run test --prefix backend && npm run test --prefix frontend",
+    "start:backend": "npm --prefix backend run start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
