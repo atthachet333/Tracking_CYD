@@ -4,10 +4,12 @@
 import type {
   DocumentTaskItem, DocumentsSummary, DocumentsAssigneeStat, DocumentsCompanyStat,
   CustomerStatusDistributionItem, CustomerActualStatusItem, CustomerStatusGroup,
-  CustomerTrendPoint, CustomerInsight, Pagination,
+  CustomerTrendPoint, CustomerInsight, Pagination, PaymentDistributionItem, PaymentGroup,
 } from "@tracking-cyd/shared";
-import { GROUP_LABELS, GROUP_ORDER } from "./documents-status.config";
+import { GROUP_LABELS, GROUP_ORDER, PAYMENT_LABELS } from "./documents-status.config";
 import { workloadLevel } from "./documents-dashboard.types";
+
+const PAYMENT_ORDER: PaymentGroup[] = ["paid", "pending", "unpaid"];
 
 function pct(part: number, total: number): number {
   if (total <= 0) return 0;
@@ -45,6 +47,9 @@ export function computeSummary(items: DocumentTaskItem[]): DocumentsSummary {
     else if (it.statusGroup === "issues") issues++;
     else unclassified++;
   }
+  const pendingPayment = items.filter((i) => i.paymentGroup === "pending").length;
+  const paidPayment = items.filter((i) => i.paymentGroup === "paid").length;
+
   return {
     totalItems: total,
     inProgress, completed, issues, unclassified,
@@ -52,7 +57,32 @@ export function computeSummary(items: DocumentTaskItem[]): DocumentsSummary {
     totalEmployees: employees.size,
     completionRate: pct(completed, total),
     issueRate: pct(issues, total),
+    pendingPayment,
+    paidPayment,
   };
+}
+
+/** สัดส่วนสถานะการชำระ (paid/pending/unpaid) */
+export function computePaymentDistribution(items: DocumentTaskItem[]): PaymentDistributionItem[] {
+  const total = items.length;
+  const counts = new Map<PaymentGroup, number>();
+  for (const it of items) counts.set(it.paymentGroup, (counts.get(it.paymentGroup) ?? 0) + 1);
+  return PAYMENT_ORDER.map((key) => {
+    const count = counts.get(key) ?? 0;
+    return { key, label: PAYMENT_LABELS[key], count, percentage: pct(count, total) };
+  });
+}
+
+/** ค่าดิบสถานะการชำระ (เรียงมากไปน้อย) */
+export function computePaymentActual(items: DocumentTaskItem[]): CustomerActualStatusItem[] {
+  const counts = new Map<string, { count: number; group: CustomerStatusGroup }>();
+  for (const it of items) {
+    const label = it.paymentStatus.trim() || "(ไม่ระบุ)";
+    const cur = counts.get(label);
+    if (cur) cur.count++;
+    else counts.set(label, { count: 1, group: "unclassified" });
+  }
+  return [...counts.entries()].map(([status, v]) => ({ status, count: v.count, group: v.group })).sort((a, b) => b.count - a.count);
 }
 
 export function computeDistribution(items: DocumentTaskItem[]): CustomerStatusDistributionItem[] {
@@ -79,15 +109,16 @@ export function computeActualBreakdown(items: DocumentTaskItem[]): CustomerActua
 }
 
 export function computeAssignees(items: DocumentTaskItem[]): DocumentsAssigneeStat[] {
-  const map = new Map<string, { total: number; ip: number; done: number; iss: number; unc: number; companies: Set<string>; latest: string | null }>();
+  const map = new Map<string, { total: number; ip: number; done: number; iss: number; unc: number; pend: number; companies: Set<string>; latest: string | null }>();
   for (const it of items) {
     const a = it.assignee.trim() || "ไม่ระบุ";
-    const s = map.get(a) ?? { total: 0, ip: 0, done: 0, iss: 0, unc: 0, companies: new Set<string>(), latest: null };
+    const s = map.get(a) ?? { total: 0, ip: 0, done: 0, iss: 0, unc: 0, pend: 0, companies: new Set<string>(), latest: null };
     s.total++;
     if (it.statusGroup === "in_progress") s.ip++;
     else if (it.statusGroup === "completed") s.done++;
     else if (it.statusGroup === "issues") s.iss++;
     else s.unc++;
+    if (it.paymentGroup === "pending") s.pend++;
     if (it.company.trim()) s.companies.add(normCompany(it.company));
     if (it.workDate && (!s.latest || it.workDate > s.latest)) s.latest = it.workDate;
     map.set(a, s);
@@ -95,7 +126,7 @@ export function computeAssignees(items: DocumentTaskItem[]): DocumentsAssigneeSt
   return [...map.entries()]
     .map(([assignee, s]) => ({
       assignee, total: s.total, inProgress: s.ip, completed: s.done, issues: s.iss, unclassified: s.unc,
-      companies: s.companies.size, latestDate: s.latest, workloadLevel: workloadLevel(s.total),
+      pendingPayment: s.pend, companies: s.companies.size, latestDate: s.latest, workloadLevel: workloadLevel(s.total),
     }))
     .sort((a, b) => b.total - a.total || a.assignee.localeCompare(b.assignee));
 }
@@ -113,7 +144,8 @@ export function computeCompanies(items: DocumentTaskItem[]): DocumentsCompanySta
   return [...map.values()]
     .map((s) => ({
       company: s.display, total: s.total, assignees: [...s.assignees],
-      latestStatus: s.latest?.actualStatus ?? "", latestDetail: s.latest?.detail ?? "", latestDate: s.latest?.workDate ?? null,
+      latestStatus: s.latest?.actualStatus ?? "", latestPayment: s.latest?.paymentStatus ?? "",
+      latestDetail: s.latest?.detail ?? "", latestDate: s.latest?.workDate ?? null,
     }))
     .sort((a, b) => b.total - a.total || a.company.localeCompare(b.company));
 }
@@ -143,23 +175,27 @@ export function computeTrends(items: DocumentTaskItem[]): CustomerTrendPoint[] {
 }
 
 export interface DocFilterOpts {
-  search?: string; status?: string; statusGroup?: CustomerStatusGroup; assignee?: string; company?: string;
+  search?: string; status?: string; statusGroup?: CustomerStatusGroup;
+  paymentStatus?: string; paymentGroup?: PaymentGroup;
+  assignee?: string; company?: string;
   dateFrom?: string; dateTo?: string;
-  sortBy?: "workDate" | "caseNo" | "company" | "assignee" | "actualStatus";
+  sortBy?: "workDate" | "caseNo" | "company" | "assignee" | "actualStatus" | "paymentStatus";
   sortOrder?: "asc" | "desc"; page: number; pageSize: number;
 }
 
 export function filterItems(items: DocumentTaskItem[], o: DocFilterOpts): { data: DocumentTaskItem[]; pagination: Pagination } {
   let rows = items;
   if (o.statusGroup) rows = rows.filter((r) => r.statusGroup === o.statusGroup);
+  if (o.paymentGroup) rows = rows.filter((r) => r.paymentGroup === o.paymentGroup);
   if (o.assignee) { const a = o.assignee.toLowerCase(); rows = rows.filter((r) => r.assignee.toLowerCase().includes(a)); }
   if (o.company) { const c = o.company.toLowerCase(); rows = rows.filter((r) => r.company.toLowerCase().includes(c)); }
   if (o.status) { const s = o.status.toLowerCase(); rows = rows.filter((r) => r.actualStatus.toLowerCase().includes(s)); }
+  if (o.paymentStatus) { const p = o.paymentStatus.toLowerCase(); rows = rows.filter((r) => r.paymentStatus.toLowerCase().includes(p)); }
   if (o.dateFrom) rows = rows.filter((r) => (r.workDate ?? "") >= o.dateFrom!);
   if (o.dateTo) rows = rows.filter((r) => (r.workDate ?? "") <= o.dateTo!);
   if (o.search) {
     const s = o.search.toLowerCase();
-    rows = rows.filter((r) => [r.caseNo, r.company, r.assignee, r.actualStatus, r.detail].some((v) => v.toLowerCase().includes(s)));
+    rows = rows.filter((r) => [r.caseNo, r.company, r.assignee, r.actualStatus, r.paymentStatus, r.detail].some((v) => v.toLowerCase().includes(s)));
   }
   if (o.sortBy) {
     const key = o.sortBy, dir = o.sortOrder === "desc" ? -1 : 1;

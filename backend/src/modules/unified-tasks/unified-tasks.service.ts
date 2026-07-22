@@ -4,7 +4,7 @@
    - ทนต่อโดเมนใดโดเมนหนึ่งล่ม (ใส่ warning แต่ยังคืนอีกฝั่ง)
    ============================================================ */
 import type { UnifiedTask, UnifiedTasksResponse, CustomerStatusGroup, Pagination } from "@tracking-cyd/shared";
-import { customerDashboardService } from "../customer-dashboard/customer-dashboard.service";
+import { adminDashboardService } from "../admin-dashboard/admin-dashboard.service";
 import { documentsDashboardService } from "../documents-dashboard/documents-dashboard.service";
 import { adminToUnified, documentToUnified } from "./unified-tasks.adapter";
 
@@ -13,6 +13,7 @@ export interface UnifiedFilterOpts {
   search?: string;
   status?: string;
   statusGroup?: CustomerStatusGroup;
+  paymentStatus?: string;
   assignee?: string;
   company?: string;
   dateFrom?: string;
@@ -24,12 +25,32 @@ export interface UnifiedFilterOpts {
   refresh?: boolean;
 }
 
+/** label ภาษาไทยของคอลัมน์ (ใช้ทั้ง UI และ Export) */
+const COLUMN_LABELS: Record<string, string> = {
+  workDate: "วันที่",
+  departmentLabel: "แผนก",
+  caseNo: "รหัสเคส",
+  companyName: "ชื่อบริษัท",
+  assignee: "ผู้รับผิดชอบ",
+  detail: "รายละเอียดเบื้องต้น",
+  quotationStatus: "สถานะใบเสนอราคา",
+  paymentStatus: "สถานะการชำระ",
+  followUp1: "ติดตามรอบ 1",
+  followUp2: "ติดตามรอบ 2",
+  followUp3: "ติดตามรอบ 3",
+  customerStatus: "สถานะลูกค้า",
+  actualStatus: "สถานะงาน",
+  statusGroup: "กลุ่มสถานะ",
+  sourceSheet: "แหล่งข้อมูล",
+  sourceRow: "แถวต้นทาง",
+};
+
 async function collect(refresh: boolean): Promise<{ tasks: UnifiedTask[]; warnings: string[] }> {
   const warnings: string[] = [];
   let tasks: UnifiedTask[] = [];
 
   const [adminRes, docsRes] = await Promise.allSettled([
-    customerDashboardService.getDataset(refresh),
+    adminDashboardService.getDataset(refresh),
     documentsDashboardService.getDataset(refresh),
   ]);
 
@@ -56,6 +77,7 @@ export const unifiedTasksService = {
     if (o.assignee) { const a = o.assignee.toLowerCase(); rows = rows.filter((t) => t.assignee.toLowerCase().includes(a)); }
     if (o.company) { const c = o.company.toLowerCase(); rows = rows.filter((t) => t.companyName.toLowerCase().includes(c)); }
     if (o.status) { const s = o.status.toLowerCase(); rows = rows.filter((t) => t.actualStatus.toLowerCase().includes(s)); }
+    if (o.paymentStatus) { const p = o.paymentStatus.toLowerCase(); rows = rows.filter((t) => (t.paymentStatus ?? "").toLowerCase().includes(p)); }
     if (o.dateFrom) rows = rows.filter((t) => (t.workDate ?? "") >= o.dateFrom!);
     if (o.dateTo) rows = rows.filter((t) => (t.workDate ?? "") <= o.dateTo!);
     if (o.search) {
@@ -80,6 +102,13 @@ export const unifiedTasksService = {
     const data = rows.slice((page - 1) * o.pageSize, page * o.pageSize);
     const pagination: Pagination = { page, pageSize: o.pageSize, total, totalPages };
 
-    return { data, pagination, summary, meta: { warnings } };
+    return {
+      data, pagination, summary,
+      meta: {
+        warnings,
+        columnLabels: COLUMN_LABELS,
+        departments: [{ key: "admin", label: "แอดมิน" }, { key: "documents", label: "เอกสาร" }],
+      },
+    };
   },
 };

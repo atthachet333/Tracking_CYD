@@ -8,7 +8,7 @@ import type { DocumentTaskItem } from "@tracking-cyd/shared";
 import {
   detectHeaderRow, buildMappingReport, countHeaderMatches, type DocColumnMap, type DocField,
 } from "./documents-header.config";
-import { classifyStatus, isUnknownStatus, normalizeAssignee } from "./documents-status.config";
+import { classifyStatus, isUnknownStatus, normalizeAssignee, classifyPayment } from "./documents-status.config";
 
 function cell(row: string[], map: DocColumnMap, field: DocField): string {
   const idx = map[field];
@@ -85,6 +85,7 @@ export function mapDocuments(values: string[][], sheetTitle: string): DocMapResu
     const followUp1 = cell(row, columnMap, "followUp1");
     const followUp2 = cell(row, columnMap, "followUp2");
     const followUp3 = cell(row, columnMap, "followUp3");
+    const paymentStatus = cell(row, columnMap, "paymentStatus");
 
     items.push({
       workDate: cell(row, columnMap, "workDate") || null,
@@ -92,6 +93,8 @@ export function mapDocuments(values: string[][], sheetTitle: string): DocMapResu
       company,
       assignee: normalizeAssignee(cell(row, columnMap, "assignee")),
       detail: cell(row, columnMap, "detail"),
+      paymentStatus,
+      paymentGroup: classifyPayment(paymentStatus),
       actualStatus,
       statusGroup: classifyStatus(actualStatus),
       latestFollowUp: followUp3 || followUp2 || followUp1,

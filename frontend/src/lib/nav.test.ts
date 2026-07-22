@@ -14,25 +14,29 @@ describe("Sidebar navigation", () => {
     expect(routes).not.toContain("/dashboard/calendar");
   });
 
-  it("ยังมีเมนูที่ต้องคงไว้ + เมนูใหม่", () => {
-    expect(labels).toContain("งานทั้งหมด");
-    expect(labels).toContain("ภาพรวมลูกค้าและสถานะเคส");
-    expect(labels).toContain("ลูกค้า");
-    expect(labels).toContain("รายงานและวิเคราะห์");
-    expect(labels).toContain("การแจ้งเตือน");
-    expect(labels).toContain("ตั้งค่าระบบ");
-    // Google Sheets Integration ยังเข้าถึงได้จาก Sidebar
+  it("มีเมนูตามสเปก 10 รายการ", () => {
+    expect(labels).toEqual([
+      "Executive Overview",
+      "ภาพรวมแอดมิน",
+      "ภาพรวมแผนกเอกสาร",
+      "ภาพรวมแอดมินและเอกสาร",
+      "งานทั้งหมด",
+      "ลูกค้า",
+      "รายงานและวิเคราะห์",
+      "การแจ้งเตือน",
+      "เชื่อมต่อ Google Sheets",
+      "ตั้งค่าระบบ",
+    ]);
+    expect(routes).toContain("/dashboard/admin-overview");
+    expect(routes).toContain("/dashboard/documents-overview");
+    expect(routes).toContain("/dashboard/team");
     expect(routes).toContain("/dashboard/settings/integrations/google-sheets");
-    expect(routes).toContain("/dashboard/customer-overview");
-    expect(routes).toContain("/dashboard/tasks");
   });
 
-  it("เปลี่ยนชื่อทีมเป็น 'ภาพรวมแอดมินและเอกสาร' + เพิ่มเมนูแผนกเอกสาร", () => {
+  it("เปลี่ยนชื่อทีมเป็น 'ภาพรวมแอดมินและเอกสาร'", () => {
     expect(labels).toContain("ภาพรวมแอดมินและเอกสาร");
     expect(labels).not.toContain("ภาพรวมทีมงานและแผนก");
     expect(labels).not.toContain("ภาพรวมทีมงานและเอกสาร");
-    expect(labels).toContain("ภาพรวมแผนกเอกสาร");
-    expect(routes).toContain("/dashboard/documents-overview");
   });
 
   it("ไม่มี route ซ้ำ", () => {

@@ -30,9 +30,18 @@ export const queryKeys = {
     problemCases: (p?: ProblemCasesParams) => ["customer-dashboard", "problem-cases", p ?? {}] as const,
     customers: (p?: CustomersParams) => ["customer-dashboard", "customers", p ?? {}] as const,
   },
+  adminDashboard: {
+    summary: ["admin-dashboard", "summary"] as const,
+    distribution: ["admin-dashboard", "status-distribution"] as const,
+    assignees: ["admin-dashboard", "assignees"] as const,
+    companies: ["admin-dashboard", "companies"] as const,
+    recentItems: ["admin-dashboard", "recent-items"] as const,
+    trends: ["admin-dashboard", "trends"] as const,
+  },
   documentsDashboard: {
     summary: ["documents-dashboard", "summary"] as const,
     distribution: ["documents-dashboard", "status-distribution"] as const,
+    payment: ["documents-dashboard", "payment-distribution"] as const,
     assignees: ["documents-dashboard", "assignees"] as const,
     companies: ["documents-dashboard", "companies"] as const,
     recentItems: ["documents-dashboard", "recent-items"] as const,

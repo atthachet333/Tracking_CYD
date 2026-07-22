@@ -1,6 +1,11 @@
 // Re-export documents-dashboard + unified tasks contracts จาก shared
 export type {
   WorkloadLevel,
+  PaymentGroup,
+  PaymentDistributionItem,
+  DocumentsPaymentDistributionResponse,
+  AdminAssigneesResponse,
+  AdminCompaniesResponse,
   DocumentTaskItem,
   DocumentsDashboardMeta,
   DocumentsSummary,

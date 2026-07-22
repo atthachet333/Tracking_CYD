@@ -85,3 +85,27 @@ export function normalizeAssignee(raw: string): string {
     // ยุบสระ/วรรณยุกต์ซ้ำติดกัน (พี่อััง → พี่อัง)
     .replace(/([ั-ฺ็-๎])\1+/g, "$1");
 }
+
+/* ============================================================
+   Payment status classification (สถานะการชำระ)
+   - ค่าจริงมักมีข้อความ/ตัวเลขต่อท้าย (เช่น "ชำระแล้ว 7", "รอชำระค่าตีวีซ่า 23/07/26")
+   - จำแนกด้วย keyword ที่ต้นข้อความ (ไม่กว้างเกินไป)
+   ============================================================ */
+export type PaymentGroup = "paid" | "pending" | "unpaid";
+
+export const PAYMENT_LABELS: Record<PaymentGroup, string> = {
+  paid: "ชำระแล้ว",
+  pending: "รอชำระ",
+  unpaid: "ยังไม่ระบุ",
+};
+
+const PAID_KEYWORDS = ["ชำระแล้ว", "ชำระเรียบร้อย", "เรียบร้อยแล้ว", "จ่ายแล้ว", "paid"];
+const PENDING_KEYWORDS = ["รอชำระ", "ค้างชำระ", "ยังไม่ชำระ", "ยังไม่ได้ชำระ", "pending", "รอโอน"];
+
+export function classifyPayment(raw: string): PaymentGroup {
+  const norm = normalizeStatus(raw);
+  if (!norm) return "unpaid";
+  if (PAID_KEYWORDS.some((k) => norm.startsWith(normalizeStatus(k)) || norm.includes(normalizeStatus(k)))) return "paid";
+  if (PENDING_KEYWORDS.some((k) => norm.startsWith(normalizeStatus(k)) || norm.includes(normalizeStatus(k)))) return "pending";
+  return "unpaid";
+}

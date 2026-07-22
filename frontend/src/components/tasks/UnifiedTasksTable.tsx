@@ -32,9 +32,10 @@ const COLUMNS: { key: keyof UnifiedTask; label: string; sort?: SortKey }[] = [
   { key: "caseNo", label: "รหัสเคส", sort: "caseNo" },
   { key: "companyName", label: "ชื่อบริษัท", sort: "companyName" },
   { key: "assignee", label: "ผู้รับผิดชอบ", sort: "assignee" },
-  { key: "detail", label: "รายละเอียด" },
-  { key: "latestFollowUp", label: "ขั้นตอนล่าสุด" },
-  { key: "actualStatus", label: "สถานะจริง", sort: "actualStatus" },
+  { key: "detail", label: "รายละเอียดเบื้องต้น" },
+  { key: "paymentStatus", label: "สถานะการชำระ" },
+  { key: "customerStatus", label: "สถานะลูกค้า" },
+  { key: "actualStatus", label: "สถานะงาน", sort: "actualStatus" },
 ];
 
 export function UnifiedTasksTable() {
@@ -91,12 +92,16 @@ export function UnifiedTasksTable() {
     else { setSortBy(key); setSortOrder("asc"); }
   };
 
-  const exportCsv = () => downloadCsv("tasks-unified", [
-    { key: "no", label: "ลำดับ" }, { key: "department", label: "แผนก" }, { key: "workDate", label: "วันที่" },
-    { key: "caseNo", label: "รหัสเคส" }, { key: "companyName", label: "ชื่อบริษัท" }, { key: "assignee", label: "ผู้รับผิดชอบ" },
-    { key: "detail", label: "รายละเอียด" }, { key: "actualStatus", label: "สถานะจริง" }, { key: "statusGroup", label: "กลุ่มสถานะ" },
-    { key: "sourceSheet", label: "source_sheet" }, { key: "sourceRow", label: "source_row" },
-  ], filtered.map((r, i) => ({ ...r, no: i + 1 })));
+  const exportCsv = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    downloadCsv(`งานทั้งหมด_${today}`, [
+      { key: "no", label: "ลำดับ" }, { key: "departmentLabel", label: "แผนก" }, { key: "workDate", label: "วันที่" },
+      { key: "caseNo", label: "รหัสเคส" }, { key: "companyName", label: "ชื่อบริษัท" }, { key: "assignee", label: "ผู้รับผิดชอบ" },
+      { key: "detail", label: "รายละเอียดเบื้องต้น" }, { key: "paymentStatus", label: "สถานะการชำระ" }, { key: "customerStatus", label: "สถานะลูกค้า" },
+      { key: "actualStatus", label: "สถานะงาน" }, { key: "statusGroup", label: "กลุ่มสถานะ" },
+      { key: "sourceSheet", label: "แหล่งข้อมูล" }, { key: "sourceRow", label: "แถวต้นทาง" },
+    ], filtered.map((r, i) => ({ ...r, no: i + 1 })));
+  };
 
   return (
     <div>
@@ -162,10 +167,11 @@ export function UnifiedTasksTable() {
                     </td>
                     <td className="px-2.5 py-2"><div className="flex items-center gap-1.5"><Avatar name={r.assignee || "?"} size={22} /><span>{r.assignee || "—"}</span></div></td>
                     <td className="max-w-[240px] truncate px-2.5 py-2 text-muted" title={r.detail}>{r.detail || "—"}</td>
-                    <td className="max-w-[180px] truncate px-2.5 py-2 text-muted" title={r.latestFollowUp}>{r.latestFollowUp || "—"}</td>
+                    <td className="max-w-[160px] truncate px-2.5 py-2" title={r.paymentStatus ?? ""}>{r.paymentStatus || "—"}</td>
+                    <td className="max-w-[140px] truncate px-2.5 py-2 text-muted" title={r.customerStatus ?? ""}>{r.customerStatus || "—"}</td>
                     <td className="px-2.5 py-2"><StatusChip raw={r.actualStatus} group={r.statusGroup} /></td>
                     <td className="px-2.5 py-2">
-                      {r.links.length > 0 ? <a href={r.links[0]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">เปิด <ExternalLink className="h-3 w-3" /></a> : <span className="text-slate-400">—</span>}
+                      {r.links.length > 0 ? <a href={r.links[0].url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:underline">{r.links[0].label} <ExternalLink className="h-3 w-3" /></a> : <span className="text-slate-400">—</span>}
                     </td>
                   </tr>
                 ))}
@@ -195,7 +201,7 @@ export function UnifiedTasksTable() {
             ))}
             {detail.links.length > 0 && (
               <div className="pt-2">
-                {detail.links.map((l) => <a key={l} href={l} target="_blank" rel="noopener noreferrer" className="mr-2 inline-flex items-center gap-1 text-brand-600 hover:underline">เปิดลิงก์ <ExternalLink className="h-3.5 w-3.5" /></a>)}
+                {detail.links.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="mr-2 inline-flex items-center gap-1 text-brand-600 hover:underline">{l.label} <ExternalLink className="h-3.5 w-3.5" /></a>)}
               </div>
             )}
           </div>

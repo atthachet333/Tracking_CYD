@@ -113,12 +113,13 @@ curl.exe -i http://localhost:6678/api/customer-dashboard/in-progress-cases
 curl.exe -i http://localhost:6678/api/customer-dashboard/completed-cases
 curl.exe -i "http://localhost:6678/api/customer-dashboard/problem-cases?page=1&pageSize=20"
 
-REM Documents dashboard + Unified tasks
+REM Admin + Documents dashboard + Unified tasks
+curl.exe -i http://localhost:6678/api/admin-dashboard/summary
 curl.exe -i http://localhost:6678/api/documents-dashboard/summary
-curl.exe -i http://localhost:6678/api/documents-dashboard/assignees
-curl.exe -i http://localhost:6678/api/documents-dashboard/companies
+curl.exe -i http://localhost:6678/api/documents-dashboard/payment-distribution
 curl.exe -i "http://localhost:6678/api/documents-dashboard/items?page=1&pageSize=20"
 curl.exe -i "http://localhost:6678/api/tasks/unified?page=1&pageSize=20"
+curl.exe -i "http://localhost:6678/api/tasks/unified?department=admin"
 curl.exe -i "http://localhost:6678/api/tasks/unified?department=documents"
 ```
 
@@ -155,7 +156,9 @@ curl.exe -i "http://localhost:6678/api/tasks/unified?department=documents"
 | GET | `/api/documents-dashboard/companies` | บริษัทที่ดูแล (จำนวนงาน/ผู้รับผิดชอบ/สถานะล่าสุด) |
 | GET | `/api/documents-dashboard/items` | ตารางงานเอกสาร · `?page=&pageSize=&search=&status=&statusGroup=&assignee=&company=&dateFrom=&dateTo=&sortBy=&sortOrder=` |
 | GET | `/api/documents-dashboard/recent-items` `/problem-items` `/trends` `/headers` | ล่าสุด / ปัญหา / แนวโน้ม / header+preview |
-| GET | `/api/tasks/unified` | งานรวม Admin + Documents · `?department=admin\|documents&…` + `summary{all,admin,documents}` |
+| GET | `/api/documents-dashboard/payment-distribution` | สัดส่วนสถานะการชำระ (paid/pending/unpaid) จาก header "สถานะการชำระ" |
+| GET | `/api/admin-dashboard/summary` `/status-distribution` `/assignees` `/companies` `/recent-items` `/problem-items` `/in-progress-items` `/trends` | ภาพรวมแอดมิน (อ่านแท็บ **ADMIN** gid 0 โดยตรง) |
+| GET | `/api/tasks/unified` | งานรวม Admin + Documents · `?department=admin\|documents&paymentStatus=&…` + `summary{all,admin,documents}` + `meta.columnLabels`(ไทย) + `meta.departments` |
 | GET | `/api/employees` `/employees/:id` `/employees/org-chart` | derived จาก assignee |
 | GET | `/api/tasks` `/customers` `/reports` | derived จาก cases |
 | GET | `/api/documents` `/approvals` `/notifications` | ว่าง (ยังไม่มีแหล่งข้อมูล) |
@@ -196,6 +199,17 @@ Error codes: `GOOGLE_SHEETS_NOT_CONFIGURED`, `GOOGLE_SHEETS_PERMISSION_DENIED`, 
 > **หมายเหตุ (Integration mapping):** `sheet-column-map` เดิม (feeds `CaseRow` + legacy dashboard) ถูก **คงไว้** เพื่อไม่ให้ integration เดิมพัง — การ map คอลัมน์ลูกค้า (followUp/deposit/contract ฯลฯ) จัดการแบบ dynamic-by-header ในโมดูล customer-dashboard แล้ว หน้า Google Sheets Integration ยังทำงานตามเดิม (headers/preview/mapping/row count/sheet id)
 
 Sidebar: เพิ่มเมนู **"ภาพรวมลูกค้าและสถานะเคส"** และ **"เชื่อมต่อ Google Sheets"**; นำเมนู **ศูนย์จัดการงานเอกสาร / ศูนย์อนุมัติเอกสาร / ปฏิทินงาน** ออกจาก Sidebar + Routing (หน้าและ API เดิมยังคงอยู่ ไม่ถูกลบ)
+
+---
+
+## Admin/Documents · ชื่อคอลัมน์ไทย + สถานะการชำระ (อัปเดตล่าสุด)
+
+- **ภาพรวมแอดมิน** (`/dashboard/admin-overview`) — อ่านแท็บ **ADMIN** จริง (56 เคส, 52 บริษัท, 3 ผู้รับผิดชอบ): KPI 8, สถานะลูกค้า, ผู้รับผิดชอบ, บริษัท, เคสล่าสุด, insight
+- **ภาพรวมแผนกเอกสาร** — เพิ่ม **สถานะการชำระ** (จาก header `สถานะการชำระ`): KPI รอชำระ/ชำระเรียบร้อย + Donut สัดส่วนการชำระ + คอลัมน์การชำระในตาราง
+  - ค่าจริงที่พบ: `เรียบร้อยแล้ว`/`ชำระแล้ว 7` → ชำระแล้ว (4), `รอชำระค่าตีวีซ่า…` → รอชำระ (1), ว่าง → ยังไม่ระบุ (4). คอลัมน์ `สถานะในระบบ` (สถานะงาน) ปัจจุบันว่าง → statusGroup = ยังไม่ระบุ (จำแนกด้วย fallback + warning)
+- **ชื่อคอลัมน์ภาษาไทย** ทุกตาราง/Export/Drawer — config กลาง `frontend/src/config/column-labels.ts` + `meta.columnLabels` จาก backend (field อังกฤษใช้ภายใน TS/API เท่านั้น)
+- **งานทั้งหมด** (`/dashboard/tasks`) — Unified (ADMIN + DOCUMENTS) คอลัมน์ไทยครบ (แผนก/สถานะการชำระ/สถานะลูกค้า/สถานะงาน) + filter แผนก/สถานะ/ผู้รับผิดชอบ + Export CSV (ชื่อไฟล์ `งานทั้งหมด_YYYY-MM-DD.csv`)
+- Sidebar 10 เมนูตามสเปก: Executive Overview · ภาพรวมแอดมิน · ภาพรวมแผนกเอกสาร · ภาพรวมแอดมินและเอกสาร · งานทั้งหมด · ลูกค้า · รายงานและวิเคราะห์ · การแจ้งเตือน · เชื่อมต่อ Google Sheets · ตั้งค่าระบบ
 
 ---
 

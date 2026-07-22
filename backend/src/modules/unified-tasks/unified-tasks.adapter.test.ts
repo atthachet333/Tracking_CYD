@@ -11,6 +11,7 @@ const admin: CustomerCaseItem = {
 
 const doc: DocumentTaskItem = {
   workDate: "08/06/2026", caseNo: "D-1", company: "Beta", assignee: "พี่แอน", detail: "งานเอกสาร",
+  paymentStatus: "ชำระแล้ว 7", paymentGroup: "paid",
   actualStatus: "ดำเนินการเรียบร้อย", statusGroup: "completed", latestFollowUp: "",
   quotationLink: "", contractLink: "https://c/9", sourceSheet: "DOCUMENTS", sourceRow: 3,
 };
@@ -21,7 +22,8 @@ describe("unified adapter", () => {
     expect(u.department).toBe("admin");
     expect(u.companyName).toBe("Alpha");
     expect(u.actualStatus).toBe("ลงนามแล้ว");
-    expect(u.links).toEqual(["https://q/1"]); // contractLink "not-a-url" ถูกกรองทิ้ง
+    expect(u.links).toEqual([{ label: "ใบเสนอราคา", url: "https://q/1" }]); // contractLink "not-a-url" ถูกกรองทิ้ง
+    expect(u.departmentLabel).toBe("แอดมิน");
     expect(u.id).toBe("admin-พี่คิม-5");
   });
   it("documentToUnified: department=documents", () => {
@@ -29,7 +31,8 @@ describe("unified adapter", () => {
     expect(u.department).toBe("documents");
     expect(u.companyName).toBe("Beta");
     expect(u.statusGroup).toBe("completed");
-    expect(u.links).toEqual(["https://c/9"]);
+    expect(u.paymentStatus).toBe("ชำระแล้ว 7");
+    expect(u.links).toEqual([{ label: "สัญญา", url: "https://c/9" }]);
     expect(u.id).toBe("documents-DOCUMENTS-3");
   });
 });

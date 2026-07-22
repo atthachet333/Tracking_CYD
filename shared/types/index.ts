@@ -438,10 +438,23 @@ export interface CustomerTrendsResponse {
 }
 
 /* ============================================================
+   Admin Dashboard · ภาพรวมแอดมิน (แท็บ ADMIN) — reuse Customer shapes
+   ============================================================ */
+export interface AdminAssigneesResponse {
+  data: DocumentsAssigneeStat[];
+  meta: CustomerDashboardMeta;
+}
+export interface AdminCompaniesResponse {
+  data: DocumentsCompanyStat[];
+  meta: CustomerDashboardMeta;
+}
+
+/* ============================================================
    Documents Dashboard · ภาพรวมแผนกเอกสาร (แท็บ DOCUMENTS)
    ============================================================ */
 
 export type WorkloadLevel = "idle" | "normal" | "moderate" | "high" | "critical";
+export type PaymentGroup = "paid" | "pending" | "unpaid";
 
 /** หนึ่งงานเอกสาร (map จาก header จริงในแท็บ DOCUMENTS) */
 export interface DocumentTaskItem {
@@ -450,7 +463,9 @@ export interface DocumentTaskItem {
   company: string;
   assignee: string;
   detail: string;           // รายละเอียดเบื้องต้น
-  actualStatus: string;     // ค่าดิบสถานะ/ขั้นตอนล่าสุด
+  paymentStatus: string;    // ค่าดิบ "สถานะการชำระ"
+  paymentGroup: PaymentGroup;
+  actualStatus: string;     // ค่าดิบสถานะ/ขั้นตอนล่าสุด (สถานะงาน)
   statusGroup: CustomerStatusGroup;
   latestFollowUp: string;
   quotationLink: string;
@@ -482,6 +497,16 @@ export interface DocumentsSummary {
   totalEmployees: number;
   completionRate: number;
   issueRate: number;
+  pendingPayment: number;  // รอชำระ
+  paidPayment: number;     // ชำระเรียบร้อย
+}
+
+/** สัดส่วนสถานะการชำระ */
+export interface PaymentDistributionItem {
+  key: PaymentGroup;
+  label: string;
+  count: number;
+  percentage: number;
 }
 
 export interface DocumentsAssigneeStat {
@@ -491,6 +516,7 @@ export interface DocumentsAssigneeStat {
   completed: number;
   issues: number;
   unclassified: number;
+  pendingPayment: number;
   companies: number;
   latestDate: string | null;
   workloadLevel: WorkloadLevel;
@@ -501,6 +527,7 @@ export interface DocumentsCompanyStat {
   total: number;
   assignees: string[];
   latestStatus: string;
+  latestPayment: string;
   latestDetail: string;
   latestDate: string | null;
 }
@@ -513,6 +540,11 @@ export interface DocumentsSummaryResponse {
 export interface DocumentsStatusDistributionResponse {
   data: CustomerStatusDistributionItem[];
   actual: CustomerActualStatusItem[];
+  meta: DocumentsDashboardMeta;
+}
+export interface DocumentsPaymentDistributionResponse {
+  data: PaymentDistributionItem[];
+  actual: CustomerActualStatusItem[]; // ค่าชำระดิบ (group=… ไม่ใช้ แต่ count ใช้)
   meta: DocumentsDashboardMeta;
 }
 export interface DocumentsAssigneesResponse {
@@ -550,18 +582,30 @@ export interface DocumentsHeadersResponse {
 
 export type TaskDepartment = "admin" | "documents";
 
+export interface UnifiedTaskLink {
+  label: string;
+  url: string;
+}
+
 export interface UnifiedTask {
   id: string;
   department: TaskDepartment;
+  departmentLabel: string; // "แอดมิน" | "เอกสาร"
   workDate: string | null;
   caseNo: string;
   companyName: string;
   assignee: string;
   detail: string;
+  quotationStatus: string | null;
+  paymentStatus: string | null;
+  followUp1: string | null;
+  followUp2: string | null;
+  followUp3: string | null;
+  customerStatus: string | null;
   actualStatus: string;
   statusGroup: CustomerStatusGroup;
   latestFollowUp: string;
-  links: string[];
+  links: UnifiedTaskLink[];
   sourceSheet: string;
   sourceRow: number;
 }
@@ -570,7 +614,11 @@ export interface UnifiedTasksResponse {
   data: UnifiedTask[];
   pagination: Pagination;
   summary: { all: number; admin: number; documents: number };
-  meta: { warnings: string[] };
+  meta: {
+    warnings: string[];
+    columnLabels: Record<string, string>;
+    departments: { key: TaskDepartment; label: string }[];
+  };
 }
 
 export interface ApiErrorBody {

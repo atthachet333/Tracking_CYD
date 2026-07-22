@@ -7,6 +7,7 @@ import { documentsDashboardController as c } from "./documents-dashboard.control
 export async function documentsDashboardRoutes(app: FastifyInstance): Promise<void> {
   app.get("/documents-dashboard/summary", (req) => c.summary(req));
   app.get("/documents-dashboard/status-distribution", (req) => c.statusDistribution(req));
+  app.get("/documents-dashboard/payment-distribution", (req) => c.paymentDistribution(req));
   app.get("/documents-dashboard/assignees", (req) => c.assignees(req));
   app.get("/documents-dashboard/workload", (req) => c.workload(req));
   app.get("/documents-dashboard/companies", (req) => c.companies(req));

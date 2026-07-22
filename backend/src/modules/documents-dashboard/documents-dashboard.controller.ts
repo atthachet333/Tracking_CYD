@@ -3,15 +3,15 @@
    ============================================================ */
 import type { FastifyRequest } from "fastify";
 import type {
-  DocumentsSummaryResponse, DocumentsStatusDistributionResponse, DocumentsAssigneesResponse,
-  DocumentsCompaniesResponse, DocumentsItemsResponse, DocumentsRecentResponse, DocumentsTrendsResponse,
-  DocumentsHeadersResponse,
+  DocumentsSummaryResponse, DocumentsStatusDistributionResponse, DocumentsPaymentDistributionResponse,
+  DocumentsAssigneesResponse, DocumentsCompaniesResponse, DocumentsItemsResponse, DocumentsRecentResponse,
+  DocumentsTrendsResponse, DocumentsHeadersResponse,
 } from "@tracking-cyd/shared";
 import { refreshQuerySchema, documentsItemsQuerySchema } from "../../schemas/index";
 import { documentsDashboardService } from "./documents-dashboard.service";
 import {
   computeSummary, computeDistribution, computeActualBreakdown, computeAssignees, computeCompanies,
-  computeRecent, computeTrends, computeInsights, filterItems,
+  computeRecent, computeTrends, computeInsights, filterItems, computePaymentDistribution, computePaymentActual,
 } from "./documents-dashboard.calculations";
 
 export const documentsDashboardController = {
@@ -27,6 +27,12 @@ export const documentsDashboardController = {
     const { refresh } = refreshQuerySchema.parse(req.query);
     const { dataset, cacheHit } = await documentsDashboardService.getDataset(refresh);
     return { data: computeDistribution(dataset.items), actual: computeActualBreakdown(dataset.items), meta: documentsDashboardService.buildMeta(dataset, cacheHit) };
+  },
+
+  async paymentDistribution(req: FastifyRequest): Promise<DocumentsPaymentDistributionResponse> {
+    const { refresh } = refreshQuerySchema.parse(req.query);
+    const { dataset, cacheHit } = await documentsDashboardService.getDataset(refresh);
+    return { data: computePaymentDistribution(dataset.items), actual: computePaymentActual(dataset.items), meta: documentsDashboardService.buildMeta(dataset, cacheHit) };
   },
 
   async assignees(req: FastifyRequest): Promise<DocumentsAssigneesResponse> {
@@ -68,8 +74,9 @@ export const documentsDashboardController = {
     const q = documentsItemsQuerySchema.parse(req.query);
     const { dataset, cacheHit } = await documentsDashboardService.getDataset(q.refresh);
     const { data, pagination } = filterItems(dataset.items, {
-      search: q.search, status: q.status, statusGroup: q.statusGroup, assignee: q.assignee, company: q.company,
-      dateFrom: q.dateFrom, dateTo: q.dateTo, sortBy: q.sortBy, sortOrder: q.sortOrder, page: q.page, pageSize: q.pageSize,
+      search: q.search, status: q.status, statusGroup: q.statusGroup, paymentStatus: q.paymentStatus, paymentGroup: q.paymentGroup,
+      assignee: q.assignee, company: q.company, dateFrom: q.dateFrom, dateTo: q.dateTo, sortBy: q.sortBy, sortOrder: q.sortOrder,
+      page: q.page, pageSize: q.pageSize,
     });
     return { data, pagination, meta: documentsDashboardService.buildMeta(dataset, cacheHit) };
   },

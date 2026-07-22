@@ -7,6 +7,7 @@ import { apiRoutes } from "./routes/apiRoutes";
 import { syncRoutes } from "./modules/sync/sync.routes";
 import { customerDashboardRoutes } from "./modules/customer-dashboard/customer-dashboard.routes";
 import { documentsDashboardRoutes } from "./modules/documents-dashboard/documents-dashboard.routes";
+import { adminDashboardRoutes } from "./modules/admin-dashboard/admin-dashboard.routes";
 import { unifiedTasksRoutes } from "./modules/unified-tasks/unified-tasks.routes";
 import { errorHandler } from "./middleware/errorHandler";
 import { env, isGoogleConfigured, missingGoogleEnv } from "./config/env";
@@ -39,6 +40,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await app.register(syncRoutes, { prefix: "/api" });
   await app.register(customerDashboardRoutes, { prefix: "/api" });
   await app.register(documentsDashboardRoutes, { prefix: "/api" });
+  await app.register(adminDashboardRoutes, { prefix: "/api" });
   await app.register(unifiedTasksRoutes, { prefix: "/api" });
 
   app.get("/", async () => ({ service: "tracking-cyd-backend", health: "/api/health" }));

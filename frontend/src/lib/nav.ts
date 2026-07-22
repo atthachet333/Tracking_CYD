@@ -1,6 +1,6 @@
 import {
-  LayoutGrid, ListTodo, Users, UserCheck, BarChart3,
-  Bell, Settings, FileSpreadsheet, Files, type LucideIcon,
+  LayoutGrid, ListTodo, Users, ShieldCheck, BarChart3,
+  Bell, Settings, FileSpreadsheet, Files, UsersRound, type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
@@ -20,9 +20,9 @@ export const NAV: NavGroup[] = [
     group: "ภาพรวม",
     items: [
       { to: "/dashboard", label: "Executive Overview", icon: LayoutGrid },
-      { to: "/dashboard/customer-overview", label: "ภาพรวมลูกค้าและสถานะเคส", icon: UserCheck },
-      { to: "/dashboard/team", label: "ภาพรวมแอดมินและเอกสาร", icon: Users },
+      { to: "/dashboard/admin-overview", label: "ภาพรวมแอดมิน", icon: ShieldCheck },
       { to: "/dashboard/documents-overview", label: "ภาพรวมแผนกเอกสาร", icon: Files },
+      { to: "/dashboard/team", label: "ภาพรวมแอดมินและเอกสาร", icon: UsersRound },
     ],
   },
   {

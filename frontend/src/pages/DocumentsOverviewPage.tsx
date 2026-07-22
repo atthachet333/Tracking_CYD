@@ -3,10 +3,11 @@ import { motion } from "framer-motion";
 import { RefreshCw, ArrowRight, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  useDocumentsSummary, useDocumentsDistribution, useDocumentsAssignees,
+  useDocumentsSummary, useDocumentsDistribution, useDocumentsPayment, useDocumentsAssignees,
   useDocumentsCompanies, useDocumentsRecent, useRefreshDocumentsDashboard,
 } from "@/hooks/useDocumentsDashboard";
 import { DocumentsKpiCards } from "@/components/documents-dashboard/DocumentsKpiCards";
+import { DocumentsPaymentChart } from "@/components/documents-dashboard/DocumentsPaymentChart";
 import { DocumentsWorkloadChart } from "@/components/documents-dashboard/DocumentsWorkloadChart";
 import { DocumentsAssigneesTable } from "@/components/documents-dashboard/DocumentsAssigneesTable";
 import { DocumentsCompaniesTable } from "@/components/documents-dashboard/DocumentsCompaniesTable";
@@ -23,6 +24,7 @@ export function DocumentsOverviewPage() {
   const navigate = useNavigate();
   const summary = useDocumentsSummary();
   const distribution = useDocumentsDistribution();
+  const payment = useDocumentsPayment();
   const assignees = useDocumentsAssignees();
   const companies = useDocumentsCompanies();
   const recent = useDocumentsRecent();
@@ -80,14 +82,18 @@ export function DocumentsOverviewPage() {
         </div>
       )}
 
-      {/* Charts */}
+      {/* Charts: สถานะงาน + สถานะการชำระ + Workload */}
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="p-5">
           <SectionTitle title="สัดส่วนสถานะงาน" />
           {distribution.isLoading ? <Skeleton className="h-60" /> : distribution.isError ? <ErrorState message="โหลดไม่สำเร็จ" onRetry={() => distribution.refetch()} /> : <CustomerStatusDonut data={distribution.data?.data ?? []} />}
         </Card>
-        <Card className="p-5 lg:col-span-2">
-          <SectionTitle title="งานตามผู้รับผิดชอบ (Workload)" />
+        <Card className="p-5">
+          <SectionTitle title="สัดส่วนสถานะการชำระ" />
+          {payment.isLoading ? <Skeleton className="h-60" /> : payment.isError ? <ErrorState message="โหลดไม่สำเร็จ" onRetry={() => payment.refetch()} /> : <DocumentsPaymentChart data={payment.data?.data ?? []} />}
+        </Card>
+        <Card className="p-5">
+          <SectionTitle title="งานตามผู้รับผิดชอบ" sub="Workload" />
           {assignees.isLoading ? <Skeleton className="h-60" /> : assignees.isError ? <ErrorState message="โหลดไม่สำเร็จ" onRetry={() => assignees.refetch()} /> : <DocumentsWorkloadChart data={assignees.data?.data ?? []} />}
         </Card>
       </div>
@@ -100,14 +106,14 @@ export function DocumentsOverviewPage() {
         </Card>
         <Card className="p-5">
           <SectionTitle title="สรุปผู้รับผิดชอบ" />
-          {assignees.isLoading ? <Skeleton className="h-56" /> : <DocumentsAssigneesTable data={assignees.data?.data ?? []} />}
+          {assignees.isLoading ? <Skeleton className="h-56" /> : <DocumentsAssigneesTable data={assignees.data?.data ?? []} showPayment />}
         </Card>
       </div>
 
       {/* Companies */}
       <Card className="mb-4 p-5">
         <SectionTitle title="บริษัทที่อยู่ในการดูแล" />
-        {companies.isLoading ? <Skeleton className="h-40" /> : companies.isError ? <ErrorState message="โหลดไม่สำเร็จ" onRetry={() => companies.refetch()} /> : <DocumentsCompaniesTable data={companies.data?.data ?? []} />}
+        {companies.isLoading ? <Skeleton className="h-40" /> : companies.isError ? <ErrorState message="โหลดไม่สำเร็จ" onRetry={() => companies.refetch()} /> : <DocumentsCompaniesTable data={companies.data?.data ?? []} showPayment />}
       </Card>
 
       {/* Recent + insights */}

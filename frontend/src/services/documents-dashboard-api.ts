@@ -5,7 +5,7 @@ import { httpGet, toQuery } from "./api-client";
 import type {
   DocumentsSummaryResponse, DocumentsStatusDistributionResponse, DocumentsAssigneesResponse,
   DocumentsCompaniesResponse, DocumentsItemsResponse, DocumentsRecentResponse, DocumentsTrendsResponse,
-  DocumentsHeadersResponse,
+  DocumentsHeadersResponse, DocumentsPaymentDistributionResponse,
 } from "@/types/documents-dashboard";
 
 export interface DocumentsItemsParams {
@@ -27,6 +27,7 @@ const rq = (r?: boolean) => (r ? "?refresh=true" : "");
 export const documentsDashboardApi = {
   summary: (r?: boolean) => httpGet<DocumentsSummaryResponse>(`/documents-dashboard/summary${rq(r)}`),
   statusDistribution: (r?: boolean) => httpGet<DocumentsStatusDistributionResponse>(`/documents-dashboard/status-distribution${rq(r)}`),
+  paymentDistribution: (r?: boolean) => httpGet<DocumentsPaymentDistributionResponse>(`/documents-dashboard/payment-distribution${rq(r)}`),
   assignees: (r?: boolean) => httpGet<DocumentsAssigneesResponse>(`/documents-dashboard/assignees${rq(r)}`),
   workload: (r?: boolean) => httpGet<DocumentsAssigneesResponse>(`/documents-dashboard/workload${rq(r)}`),
   companies: (r?: boolean) => httpGet<DocumentsCompaniesResponse>(`/documents-dashboard/companies${rq(r)}`),

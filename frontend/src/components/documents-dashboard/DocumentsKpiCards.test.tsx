@@ -7,6 +7,7 @@ import { DocumentsKpiCards } from "./DocumentsKpiCards";
 const summary: DocumentsSummary = {
   totalItems: 9, inProgress: 0, completed: 9, issues: 0, unclassified: 0,
   uniqueCompanies: 3, totalEmployees: 4, completionRate: 100, issueRate: 0,
+  pendingPayment: 1, paidPayment: 4,
 };
 
 afterEach(cleanup);
@@ -27,7 +28,7 @@ describe("DocumentsKpiCards", () => {
   it("Success → KPI 6 ใบจากข้อมูลจริง", () => {
     render(<DocumentsKpiCards summary={summary} isLoading={false} isError={false} onRetry={() => {}} />);
     expect(screen.getByText("งานเอกสารทั้งหมด")).not.toBeNull();
-    expect(screen.getByText("เสร็จสิ้น")).not.toBeNull();
+    expect(screen.getByText("งานเสร็จสิ้น")).not.toBeNull();
     expect(screen.getByText("บริษัททั้งหมด")).not.toBeNull();
     expect(screen.getByText("ผู้รับผิดชอบ")).not.toBeNull();
   });
@@ -35,7 +36,7 @@ describe("DocumentsKpiCards", () => {
   it("Drill-down → คลิก 'เสร็จสิ้น' เรียก onSelectGroup", () => {
     const onSelectGroup = vi.fn();
     render(<DocumentsKpiCards summary={summary} isLoading={false} isError={false} onRetry={() => {}} onSelectGroup={onSelectGroup} />);
-    fireEvent.click(screen.getByText("เสร็จสิ้น"));
+    fireEvent.click(screen.getByText("งานเสร็จสิ้น"));
     expect(onSelectGroup).toHaveBeenCalledWith("completed");
   });
 });

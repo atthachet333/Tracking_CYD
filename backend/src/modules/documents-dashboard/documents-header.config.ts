@@ -7,24 +7,25 @@
 
 export type DocField =
   | "workDate" | "caseNo" | "assignee" | "company" | "detail"
-  | "quotation" | "quotationLink"
+  | "paymentStatus" | "quotation" | "quotationLink"
   | "followUp1" | "followUp2" | "followUp3"
   | "status" | "deposit" | "contractDraft" | "contractLink"
   | "sourceSheet" | "sourceRow";
 
 export const DOC_ALIASES: Record<DocField, string[]> = {
   workDate: ["วันที่", "วันที่รับงาน", "date"],
-  caseNo: ["รหัสเคส", "case no", "case number", "caseno"],
+  caseNo: ["รหัสเคส", "เลขเคส", "case no", "case number", "caseno"],
   assignee: ["ผู้รับผิดชอบ", "ผู้ดูแลงาน", "ผู้ดำเนินการ", "assignee"],
   company: ["ชื่อบริษัท", "บริษัท", "customer", "customer name"],
-  detail: ["รายละเอียดเบื้องต้น", "คุยรายละเอียดเบื้องต้น", "รายละเอียดงาน", "รายละเอียด"],
+  detail: ["รายละเอียดเบื้องต้น", "คุยรายละเอียดเบื้องต้น", "รายละเอียดงาน", "รายละเอียดเอกสาร", "รายละเอียด"],
+  paymentStatus: ["สถานะการชำระ", "การชำระเงิน", "สถานะชำระเงิน", "การชำระ"],
   quotation: ["ทำใบเสนอราคา", "สถานะใบเสนอราคา"],
   quotationLink: ["ลิงก์ใบเสนอราคา", "ส่งใบเสนอราคา", "ลิ้งใบเสนอราคา"],
   followUp1: ["ติดตามรอบ 1", "ติดตามผลครั้งที่ 1", "ติดตาม 1"],
   followUp2: ["ติดตามรอบ 2", "ติดตามผลครั้งที่ 2", "ติดตาม 2"],
   followUp3: ["ติดตามรอบ 3", "ติดตามผลครั้งที่ 3", "ติดตาม 3"],
-  // สถานะเฉพาะ (priority สูง) — resolveStatus จะ fallback ไป quotation/followUp ถ้าว่าง
-  status: ["สถานะงาน", "ขั้นตอนปัจจุบัน", "ผลการดำเนินการ", "สถานะ", "สถานะลูกค้า"],
+  // สถานะงาน (priority สูง) — resolveStatus จะ fallback ไป quotation/followUp ถ้าว่าง
+  status: ["สถานะในระบบ", "สถานะงาน", "สถานะปัจจุบัน", "ขั้นตอนปัจจุบัน", "ผลการดำเนินการ", "สถานะ", "สถานะลูกค้า"],
   deposit: ["มัดจำ", "มัดจำ (ส่งขาด)", "มัดจำ(ส่งขาด)"],
   contractDraft: ["ร่างสัญญา"],
   contractLink: ["ลิงก์สัญญา", "ส่งลิงก์สัญญา", "ลิ้งสัญญา"],
@@ -33,7 +34,7 @@ export const DOC_ALIASES: Record<DocField, string[]> = {
 };
 
 const FIELDS = Object.keys(DOC_ALIASES) as DocField[];
-const DETECT_FIELDS: DocField[] = ["workDate", "caseNo", "assignee", "company", "detail", "status"];
+const DETECT_FIELDS: DocField[] = ["workDate", "caseNo", "assignee", "company", "detail", "paymentStatus", "status"];
 
 export type DocColumnMap = Partial<Record<DocField, number>>;
 

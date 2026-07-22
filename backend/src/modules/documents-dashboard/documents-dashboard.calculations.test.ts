@@ -13,6 +13,8 @@ function mk(group: CustomerStatusGroup, over: Partial<DocumentTaskItem> = {}): D
     company: over.company ?? `Co ${seq}`,
     assignee: over.assignee ?? "พี่แอน",
     detail: over.detail ?? "",
+    paymentStatus: over.paymentStatus ?? "",
+    paymentGroup: over.paymentGroup ?? "unpaid",
     actualStatus: over.actualStatus ?? group,
     statusGroup: group,
     latestFollowUp: over.latestFollowUp ?? "",
