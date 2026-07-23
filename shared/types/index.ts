@@ -622,6 +622,80 @@ export interface UnifiedTasksResponse {
   };
 }
 
+/* ============================================================
+   Authentication / RBAC / Audit
+   ============================================================ */
+export type UserRole = "admin" | "executive";
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  admin: "ผู้ดูแลระบบ",
+  executive: "ผู้บริหาร",
+};
+
+/** ข้อมูลผู้ใช้ที่ส่งไป frontend (ไม่มี passwordHash) */
+export interface AuthUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  roleLabel: string;
+}
+
+export interface LoginResponse {
+  user: AuthUser;
+}
+
+export type Permission =
+  | "dashboardRead"
+  | "reportRead"
+  | "exportData"
+  | "settingsManage"
+  | "integrationManage"
+  | "syncExecute"
+  | "rebuildExecute"
+  | "googleSheetsWrite"
+  | "userManage"
+  | "auditRead";
+
+/** เมทริกซ์สิทธิ์ตาม role (แหล่งความจริงเดียว — ใช้ทั้ง backend & frontend) */
+export const PERMISSIONS: Record<Permission, UserRole[]> = {
+  dashboardRead: ["admin", "executive"],
+  reportRead: ["admin", "executive"],
+  exportData: ["admin", "executive"],
+  settingsManage: ["admin"],
+  integrationManage: ["admin"],
+  syncExecute: ["admin"],
+  rebuildExecute: ["admin"],
+  googleSheetsWrite: ["admin"],
+  userManage: ["admin"],
+  auditRead: ["admin"],
+};
+
+export function hasPermission(role: UserRole | null | undefined, permission: Permission): boolean {
+  return !!role && PERMISSIONS[permission].includes(role);
+}
+
+export interface AuditLogItem {
+  id: string;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  actorRole: UserRole | null;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  result: "success" | "failure";
+  requestId: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface AuditLogListResponse {
+  data: AuditLogItem[];
+  pagination: Pagination;
+}
+
 export interface ApiErrorBody {
   error: {
     code: string;

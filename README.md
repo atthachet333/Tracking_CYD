@@ -361,13 +361,39 @@ curl.exe -i -X POST http://localhost:6678/api/sync/admin/p-kim
 
 ---
 
+## Authentication / RBAC / Audit
+
+ระบบล็อกอินจริง + บังคับสิทธิ์ที่ **Backend** (frontend guard เป็นแค่ UX)
+
+**สถาปัตยกรรม session (Option A — Server Session):** HttpOnly cookie (`tracking_cyd_session`, `SameSite=Lax`, `Secure` บน production) + session store ฝั่ง server (เก็บเฉพาะ **SHA-256 ของ token**, ไม่เก็บ raw), มี expiry + revoke ตอน logout — เลือก session cookie เพราะระบบเป็น server เดียว, ปลอดภัยกว่าเก็บ token ใน storage, และรองรับ revoke ทันที · Password hash ด้วย **bcrypt** (bcryptjs, cost 12) · เก็บข้อมูล users/sessions/audit แบบ **file-backed** ที่ `backend/data/` (gitignored; production หลาย instance ควรย้ายเป็น DB)
+
+**สร้างผู้ใช้:** ตั้ง `BOOTSTRAP_ADMIN_EMAIL/PASSWORD` (+ `BOOTSTRAP_EXECUTIVE_*`) ใน `backend/.env` → ระบบสร้างให้ตอน startup (idempotent, hash ก่อนบันทึก, ไม่ log รหัสผ่าน) · ห้าม hardcode รหัสผ่านใน source
+
+**Role matrix** (`shared` = แหล่งความจริงเดียว, ใช้ทั้ง BE/FE):
+
+| Permission | admin | executive |
+|---|:--:|:--:|
+| dashboardRead / reportRead / exportData | ✓ | ✓ |
+| settingsManage / integrationManage | ✓ | — |
+| syncExecute / rebuildExecute / googleSheetsWrite | ✓ | — |
+| userManage / auditRead | ✓ | — |
+
+**Auth API:** `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` (401 ถ้าไม่มี session) · `GET /api/audit-logs` (admin เท่านั้น)
+
+**การป้องกัน:** ทุก `/api/*` ต้องล็อกอิน (ยกเว้น `/api/health`, `/api/auth/login`) · เขียน Google Sheets (`/api/sync/admin/*`, `/api/sheets/summary/rebuild`) = **admin เท่านั้น** (preHandler + actor guard ใน route + audit) — Executive ยิงตรงได้ **403** · Refresh (`/api/sheets/refresh`) = read-only (executive ใช้ได้)
+
+**Audit log:** บันทึก `LOGIN_SUCCESS/FAILED`, `LOGOUT`, `SYNC_ADMIN/ALL`, `REBUILD_SUMMARY` พร้อม actor/role/result/requestId/rows — **ไม่เก็บ** password/token/private key (redact อัตโนมัติ)
+
+**Error vs Empty:** Executive Overview แยก Loading / Empty (200 rowsRead=0) / Error (แสดง "—" + ปุ่มลองใหม่ ไม่แสดง 0) / Partial (ล้มฝั่งเดียว → "คำนวณไม่สมบูรณ์") + แสดง "คำนวณล่าสุด" (Asia/Bangkok) · KPI "ลูกค้าทั้งหมด" = บริษัทไม่ซ้ำ (unique customers), แยกจาก "เคสทั้งหมด" และ "งานทั้งหมด"
+
 ## Security Notes
 
-- credential อยู่ที่ backend เท่านั้น (ไม่ส่งไป frontend/response/log)
-- CORS จำกัดที่ `FRONTEND_ORIGIN`
-- rate limit ที่ `/api/sheets/refresh`
+- credential อยู่ที่ backend เท่านั้น (ไม่ส่งไป frontend/response/log); passwordHash/token ไม่หลุดใน response
+- CORS จำกัดที่ `FRONTEND_ORIGIN` + `credentials: true` (cookie), session cookie HttpOnly/SameSite/Secure
+- rate limit: login 5/นาที, sync/rebuild 5/นาที, `/sheets/refresh` 10/นาที
 - Zod validate ทุก input, error sanitize (ไม่มี stack trace ใน production)
-- แชร์ชีตแบบ **Viewer** (อ่านอย่างเดียว)
+- แชร์ชีตแบบ **Viewer** (อ่านอย่างเดียว); write ผ่าน service account เฉพาะ admin action
+- `backend/data/` (users/sessions/audit) gitignored — ห้าม commit
 
 ---
 © 2026 CHAIYADET PROGRESS CO., LTD. · เวอร์ชัน 1.0.0

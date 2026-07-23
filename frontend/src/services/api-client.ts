@@ -19,8 +19,12 @@ export class ApiError extends Error {
   }
 }
 
+/** path ที่ไม่ต้อง broadcast auth:unauthorized (การ login เอง) */
+const AUTH_SILENT = ["/auth/login", "/auth/me"];
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    credentials: "include", // ส่ง session cookie
     headers: { Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
     ...init,
   });
@@ -38,6 +42,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       }
     } catch {
       /* non-JSON error */
+    }
+    // session หมดอายุ/ยังไม่ล็อกอิน → แจ้ง app ให้กลับ login (ยกเว้น flow login เอง)
+    if (res.status === 401 && !AUTH_SILENT.some((p) => path.startsWith(p))) {
+      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
     throw new ApiError(message, code, res.status, requestId);
   }

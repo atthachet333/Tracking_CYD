@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { RefreshCw, Users, ListTodo, CheckCircle2, TriangleAlert, Activity, Building2 } from "lucide-react";
+import { RefreshCw, Users, ListTodo, CheckCircle2, TriangleAlert, Activity, Building2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
@@ -83,13 +83,28 @@ export function DashboardOverview() {
     return { distribution, deptRows, topWorkload, topCompanies, recent, teamAll: teamAll.size, teamAdmin: teamAdmin.size, teamDocs: teamDocs.size };
   }, [rows]);
 
-  const totalWork = (cs?.totalCustomers ?? 0) === 0 && rows.length === 0 ? 0 : rows.length;
+  // แยก error/partial ให้ชัด — ห้ามแสดง 0 เมื่อโหลดไม่ได้
+  const customerErr = customer.isError;
+  const docsErr = documents.isError;
+  const unifiedErr = unified.isError;
+  const combinedErr = customerErr || docsErr; // KPI รวมเชื่อถือไม่ได้ถ้าฝั่งใดฝั่งหนึ่งล้ม
+  const unifiedPartial = (unified.data?.meta.warnings.length ?? 0) > 0;
+
+  const totalWork = rows.length;
   const completedAll = (cs?.completed ?? 0) + (ds?.completed ?? 0);
   const issuesAll = (cs?.issues ?? 0) + (ds?.issues ?? 0);
   const inProgressAll = (cs?.inProgress ?? 0) + (ds?.inProgress ?? 0);
   const completionRate = totalWork ? Math.round((completedAll / totalWork) * 10000) / 100 : 0;
   const issueRate = totalWork ? Math.round((issuesAll / totalWork) * 10000) / 100 : 0;
 
+  // "ลูกค้าทั้งหมด" = บริษัทไม่ซ้ำ (unique customers) ข้าม Admin+Documents
+  const uniqueCustomers = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) { const c = r.companyName.trim().replace(/\s+/g, " ").toLowerCase(); if (c) set.add(c); }
+    return set.size;
+  }, [rows]);
+
+  const calculatedAt = customer.data?.meta.lastUpdatedAt ?? documents.data?.meta.lastUpdatedAt ?? null;
   const insights = useMemo(() => [...(customer.data?.insights ?? []), ...(documents.data?.insights ?? [])].slice(0, 5), [customer.data, documents.data]);
 
   return (
@@ -102,15 +117,30 @@ export function DashboardOverview() {
 
       <SheetConnectionBar />
 
+      {/* Data freshness */}
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted">
+        <span>คำนวณล่าสุด: <b className="text-ink dark:text-slate-200">{calculatedAt ? new Date(calculatedAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "—"} น.</b></span>
+        <span>เขตเวลา: Asia/Bangkok</span>
+        {combinedErr && <span className="font-semibold text-danger">⚠ ข้อมูลบางส่วนโหลดไม่สำเร็จ — ตัวเลขรวมอาจไม่สมบูรณ์</span>}
+      </div>
+
       {/* KPI หลัก 4 ใบ */}
-      {loading && !cs ? (
+      {loading && !cs && !customerErr ? (
         <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[122px]" />)}</div>
       ) : (
         <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <KpiCard label="ลูกค้าทั้งหมด" value={cs?.totalCustomers ?? 0} icon={Users} color="blue" feature note={`บริษัท ${cs?.uniqueCompanies ?? 0} · เคส ${cs?.uniqueCases ?? 0}`} onClick={() => navigate("/dashboard/customer-overview")} />
-          <KpiCard label="งานทั้งหมด (Admin+เอกสาร)" value={totalWork} icon={ListTodo} color="purple" note={`Admin ${cs?.totalCustomers ?? 0} · เอกสาร ${ds?.totalItems ?? 0}`} onClick={() => navigate("/dashboard/tasks")} />
-          <KpiCard label="งานเสร็จสิ้น" value={completedAll} icon={CheckCircle2} color="green" note={`Completion ${completionRate}%`} onClick={() => navigate("/dashboard/tasks?statusGroup=completed")} />
-          <KpiCard label="งานที่ต้องติดตาม" value={issuesAll} icon={TriangleAlert} color="red" note={`Issue ${issueRate}%`} onClick={() => navigate("/dashboard/tasks?statusGroup=issues")} />
+          {customerErr
+            ? <ErrorKpi label="ลูกค้าทั้งหมด" onRetry={() => customer.refetch()} />
+            : <KpiCard label="ลูกค้าทั้งหมด" value={uniqueCustomers} icon={Users} color="blue" feature note={`บริษัทไม่ซ้ำ · เคสไม่ซ้ำ ${cs?.uniqueCases ?? 0}`} onClick={() => navigate("/dashboard/customer-overview")} />}
+          {unifiedErr
+            ? <ErrorKpi label="งานทั้งหมด (Admin+เอกสาร)" onRetry={() => unified.refetch()} />
+            : <KpiCard label="งานทั้งหมด (Admin+เอกสาร)" value={totalWork} icon={ListTodo} color="purple" note={unifiedPartial ? "คำนวณไม่สมบูรณ์" : `Admin ${cs?.totalCustomers ?? 0} · เอกสาร ${ds?.totalItems ?? 0}`} onClick={() => navigate("/dashboard/tasks")} />}
+          {combinedErr
+            ? <ErrorKpi label="งานเสร็จสิ้น" onRetry={() => { customer.refetch(); documents.refetch(); }} />
+            : <KpiCard label="งานเสร็จสิ้น" value={completedAll} icon={CheckCircle2} color="green" note={`Completion ${completionRate}%`} onClick={() => navigate("/dashboard/tasks?statusGroup=completed")} />}
+          {combinedErr
+            ? <ErrorKpi label="งานที่ต้องติดตาม" onRetry={() => { customer.refetch(); documents.refetch(); }} />
+            : <KpiCard label="งานที่ต้องติดตาม" value={issuesAll} icon={TriangleAlert} color="red" note={`Issue ${issueRate}%`} onClick={() => navigate("/dashboard/tasks?statusGroup=issues")} />}
         </div>
       )}
 
@@ -194,5 +224,19 @@ export function DashboardOverview() {
         </Card>
       </div>
     </motion.div>
+  );
+}
+
+/** KPI card เมื่อโหลดไม่สำเร็จ — แสดง "—" ไม่ใช่ 0 + ปุ่มลองใหม่ */
+function ErrorKpi({ label, onRetry }: { label: string; onRetry: () => void }) {
+  return (
+    <div className="surface-card relative overflow-hidden p-4">
+      <div className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-danger/10 text-danger">
+        <AlertTriangle className="h-5 w-5" />
+      </div>
+      <div className="text-[12.5px] font-medium text-muted">{label}</div>
+      <div className="mt-0.5 text-[28px] font-extrabold leading-tight text-slate-300 dark:text-slate-600">—</div>
+      <button onClick={onRetry} className="mt-1.5 text-xs font-semibold text-danger hover:underline">โหลดข้อมูลไม่สำเร็จ · ลองใหม่</button>
+    </div>
   );
 }

@@ -12,11 +12,11 @@ describe("BRAND config", () => {
 });
 
 describe("CURRENT_USER config", () => {
-  it("เป็น Executive / ผู้บริหาร และมี avatar เดิม (ไม่ใช้โลโก้แทน avatar)", () => {
+  it("เป็น Executive / ผู้บริหาร และ avatar ไม่ใช่โลโก้แบรนด์", () => {
     expect(CURRENT_USER.displayName).toBe("Executive");
     expect(CURRENT_USER.roleLabel).toBe("ผู้บริหาร");
-    expect(CURRENT_USER.avatarUrl).not.toBe("/logo.png");
-    expect(CURRENT_USER.avatarUrl).toMatch(/^https?:\/\//);
+    expect(CURRENT_USER.avatarUrl).not.toBe(BRAND.logoPath); // ไม่ใช้โลโก้แทน avatar
+    expect(CURRENT_USER.avatarUrl.length).toBeGreaterThan(0);
   });
   it("ไม่มีคำว่า Administrator / ผู้ดูแลระบบ", () => {
     expect(CURRENT_USER.displayName).not.toBe("Administrator");

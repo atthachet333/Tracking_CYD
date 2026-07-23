@@ -14,7 +14,7 @@ describe("Sidebar navigation", () => {
     expect(routes).not.toContain("/dashboard/calendar");
   });
 
-  it("มีเมนูตามสเปก 10 รายการ", () => {
+  it("มีเมนูครบ (รวมเมนู admin ที่ป้องกันด้วย permission)", () => {
     expect(labels).toEqual([
       "Executive Overview",
       "ภาพรวมแอดมิน",
@@ -25,12 +25,23 @@ describe("Sidebar navigation", () => {
       "รายงานและวิเคราะห์",
       "การแจ้งเตือน",
       "เชื่อมต่อ Google Sheets",
+      "Audit Log",
       "ตั้งค่าระบบ",
     ]);
     expect(routes).toContain("/dashboard/admin-overview");
     expect(routes).toContain("/dashboard/documents-overview");
     expect(routes).toContain("/dashboard/team");
-    expect(routes).toContain("/dashboard/settings/integrations/google-sheets");
+    expect(routes).toContain("/dashboard/audit-log");
+  });
+
+  it("เมนู admin-only ต้องมี permission (executive จะถูกกรองออก)", () => {
+    const byLabel = (l: string) => NAV.flatMap((g) => g.items).find((i) => i.label === l);
+    expect(byLabel("เชื่อมต่อ Google Sheets")?.permission).toBe("integrationManage");
+    expect(byLabel("Audit Log")?.permission).toBe("auditRead");
+    expect(byLabel("ตั้งค่าระบบ")?.permission).toBe("settingsManage");
+    // เมนูอ่านทั่วไปต้องไม่มี permission (executive เห็นได้)
+    expect(byLabel("Executive Overview")?.permission).toBeUndefined();
+    expect(byLabel("งานทั้งหมด")?.permission).toBeUndefined();
   });
 
   it("เปลี่ยนชื่อทีมเป็น 'ภาพรวมแอดมินและเอกสาร'", () => {

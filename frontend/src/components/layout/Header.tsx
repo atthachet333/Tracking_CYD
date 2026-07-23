@@ -1,10 +1,15 @@
-import { Menu, Search, Sun, Moon, Maximize, Bell, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Menu, Search, Sun, Moon, Maximize, Bell, Calendar, LogOut } from "lucide-react";
 import { useUiStore } from "@/stores/uiStore";
 import { useNotifications } from "@/hooks/useApi";
+import { useCurrentUser, useLogout } from "@/hooks/useAuth";
 import { CURRENT_USER } from "@/config/current-user";
 import { cn } from "@/lib/utils";
 
 export function Header() {
+  const navigate = useNavigate();
+  const user = useCurrentUser();
+  const logout = useLogout();
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
@@ -72,11 +77,18 @@ export function Header() {
 
       <div className="flex items-center gap-2.5 rounded-xl py-0.5 pl-1 pr-1.5">
         <div className="hidden text-right leading-tight md:block">
-          <div className="text-[13px] font-semibold">{CURRENT_USER.displayName}</div>
-          <div className="text-[11px] text-white/80">{CURRENT_USER.roleLabel}</div>
+          <div className="text-[13px] font-semibold">{user?.displayName ?? CURRENT_USER.displayName}</div>
+          <div className="text-[11px] text-white/80">{user?.roleLabel ?? CURRENT_USER.roleLabel}</div>
         </div>
-        <img src={CURRENT_USER.avatarUrl} alt={CURRENT_USER.displayName} className="h-9 w-9 rounded-xl border-2 border-white/30 object-cover" />
+        <img src={CURRENT_USER.avatarUrl} alt={user?.displayName ?? CURRENT_USER.displayName} className="h-9 w-9 rounded-xl border-2 border-white/30 object-cover" />
       </div>
+
+      <HBtn
+        onClick={() => logout.mutate(undefined, { onSettled: () => navigate("/login", { replace: true }) })}
+        label="ออกจากระบบ"
+      >
+        <LogOut className="h-[19px] w-[19px]" />
+      </HBtn>
     </header>
   );
 }

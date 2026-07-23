@@ -3,14 +3,18 @@ import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
+import cookie from "@fastify/cookie";
 import { apiRoutes } from "./routes/apiRoutes";
 import { syncRoutes } from "./modules/sync/sync.routes";
 import { customerDashboardRoutes } from "./modules/customer-dashboard/customer-dashboard.routes";
 import { documentsDashboardRoutes } from "./modules/documents-dashboard/documents-dashboard.routes";
 import { adminDashboardRoutes } from "./modules/admin-dashboard/admin-dashboard.routes";
 import { unifiedTasksRoutes } from "./modules/unified-tasks/unified-tasks.routes";
+import { authRoutes } from "./modules/auth/auth.routes";
+import { authGate } from "./modules/auth/auth.middleware";
+import { bootstrapUsers } from "./modules/auth/user.store";
 import { errorHandler } from "./middleware/errorHandler";
-import { env, isGoogleConfigured, missingGoogleEnv } from "./config/env";
+import { env, isGoogleConfigured, missingGoogleEnv, sessionSecret } from "./config/env";
 
 /** สร้าง instance (แยกจาก listen เพื่อทดสอบด้วย .inject ได้) */
 export async function buildServer(): Promise<FastifyInstance> {
@@ -28,6 +32,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cors, { origin: [env.FRONTEND_ORIGIN], credentials: true });
   await app.register(rateLimit, { global: false, max: 100, timeWindow: "1 minute" });
+  await app.register(cookie, { secret: sessionSecret() });
 
   // แนบ x-request-id ทุก response
   app.addHook("onSend", async (req, reply) => {
@@ -36,6 +41,10 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   app.setErrorHandler(errorHandler);
 
+  // Global auth gate — ทุก /api/* ต้องล็อกอิน ยกเว้น /api/health, /api/auth/login
+  app.addHook("preHandler", authGate);
+
+  await app.register(authRoutes, { prefix: "/api" });
   await app.register(apiRoutes, { prefix: "/api" });
   await app.register(syncRoutes, { prefix: "/api" });
   await app.register(customerDashboardRoutes, { prefix: "/api" });
@@ -50,6 +59,11 @@ export async function buildServer(): Promise<FastifyInstance> {
 
 async function start(): Promise<void> {
   const app = await buildServer();
+
+  // สร้างผู้ใช้เริ่มต้นจาก env (idempotent) — ไม่ log รหัสผ่าน
+  const boot = bootstrapUsers();
+  if (boot.created.length > 0) app.log.info(`สร้างผู้ใช้เริ่มต้น: ${boot.created.join(", ")}`);
+  for (const w of boot.warnings) app.log.warn(`[auth] ${w}`);
 
   // แจ้งเตือนถ้ายังไม่ตั้งค่า Google Sheets (ไม่ crash)
   if (!isGoogleConfigured()) {

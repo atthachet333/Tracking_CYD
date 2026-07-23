@@ -100,3 +100,22 @@ export const unifiedTasksQuerySchema = z.object({
   refresh: boolFlag,
 });
 export type UnifiedTasksQuery = z.infer<typeof unifiedTasksQuerySchema>;
+
+/** body สำหรับ POST /api/auth/login */
+export const loginBodySchema = z.object({
+  email: z.string().min(1).max(200),
+  password: z.string().min(1).max(200),
+});
+export type LoginBody = z.infer<typeof loginBodySchema>;
+
+/** query สำหรับ GET /api/audit-logs */
+export const auditQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(200).default(20),
+  action: z.string().optional(),
+  actor: z.string().optional(),
+  result: z.enum(["success", "failure"]).optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+});
+export type AuditQuery = z.infer<typeof auditQuerySchema>;

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, CornerDownLeft } from "lucide-react";
 import { useUiStore } from "@/stores/uiStore";
+import { useAuthStore } from "@/stores/authStore";
 import { NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -20,15 +21,18 @@ export function CommandPalette() {
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(0);
 
+  const can = useAuthStore((s) => s.can);
   const commands = useMemo<Cmd[]>(() => {
     const pages: Cmd[] = NAV.flatMap((g) =>
-      g.items.map((it) => ({ label: it.label, hint: "หน้า", action: () => navigate(it.to) })),
+      g.items
+        .filter((it) => !it.permission || can(it.permission))
+        .map((it) => ({ label: it.label, hint: "หน้า", action: () => navigate(it.to) })),
     );
     return [
       ...pages,
       { label: "สลับธีม Light / Dark", hint: "การกระทำ", action: toggleTheme },
     ];
-  }, [navigate, toggleTheme]);
+  }, [navigate, toggleTheme, can]);
 
   const filtered = useMemo(
     () => commands.filter((c) => c.label.toLowerCase().includes(q.toLowerCase())),

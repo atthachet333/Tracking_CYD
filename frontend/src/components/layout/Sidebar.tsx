@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NAV } from "@/lib/nav";
 import { BRAND } from "@/config/brand";
 import { useUiStore } from "@/stores/uiStore";
 import { useNotifications } from "@/hooks/useApi";
+import { useAuthStore } from "@/stores/authStore";
 
 export function Sidebar() {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
@@ -11,11 +13,18 @@ export function Sidebar() {
   const setMobile = useUiStore((s) => s.setMobileSidebar);
 
   const { data: notifications } = useNotifications();
+  const can = useAuthStore((s) => s.can);
   const badges: Record<string, number> = {
     approvals: 0,
     notifications: notifications?.filter((n) => n.unread).length ?? 0,
     over: 0,
   };
+
+  // กรองเมนูตามสิทธิ์ (UX เท่านั้น — backend ยังตรวจจริง)
+  const nav = useMemo(
+    () => NAV.map((g) => ({ ...g, items: g.items.filter((it) => !it.permission || can(it.permission)) })).filter((g) => g.items.length > 0),
+    [can],
+  );
 
   return (
     <>
@@ -52,7 +61,7 @@ export function Sidebar() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3">
-          {NAV.map((g) => (
+          {nav.map((g) => (
             <div key={g.group}>
               {!collapsed && (
                 <div className="px-3 pb-1.5 pt-3.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{g.group}</div>

@@ -5,6 +5,7 @@ import { RefreshCw, ExternalLink, Database, Wifi, WifiOff, Settings2, ArrowRight
 import { useSheetStatus, useRefreshSheet, useSyncAdminPKim } from "@/hooks/useApi";
 import { sheet1Url } from "@/services/sheets-api";
 import { Card, Button } from "@/components/ui/primitives";
+import { PermissionGuard } from "@/components/auth/guards";
 import { useUiStore } from "@/stores/uiStore";
 import { cn } from "@/lib/utils";
 
@@ -79,13 +80,17 @@ export function SheetConnectionBar() {
           <Button><ExternalLink className="h-4 w-4" /> เปิด Google Sheet</Button>
         </a>
       )}
-      <SettingsLink />
+      <PermissionGuard permission="integrationManage"><SettingsLink /></PermissionGuard>
+      {/* รีเฟรช = read-only (executive ใช้ได้) */}
       <Button onClick={onSync} className={cn(refresh.isPending && "opacity-70")}>
         <RefreshCw className={cn("h-4 w-4", refresh.isPending && "animate-spin")} /> รีเฟรช
       </Button>
-      <Button variant="primary" onClick={onSyncPKim} className={cn(syncPKim.isPending && "opacity-70")}>
-        <ArrowRightLeft className={cn("h-4 w-4", syncPKim.isPending && "animate-spin")} /> Sync พี่คิม → ADMIN
-      </Button>
+      {/* Sync = เขียน ADMIN (admin เท่านั้น) */}
+      <PermissionGuard permission="syncExecute">
+        <Button variant="primary" onClick={onSyncPKim} className={cn(syncPKim.isPending && "opacity-70")}>
+          <ArrowRightLeft className={cn("h-4 w-4", syncPKim.isPending && "animate-spin")} /> Sync พี่คิม → ADMIN
+        </Button>
+      </PermissionGuard>
     </Card>
   );
 }
