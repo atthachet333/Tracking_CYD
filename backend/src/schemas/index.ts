@@ -71,7 +71,7 @@ export const documentsItemsQuerySchema = z.object({
   status: z.string().optional(),
   statusGroup: z.enum(["in_progress", "completed", "issues", "unclassified"]).optional(),
   paymentStatus: z.string().optional(),
-  paymentGroup: z.enum(["paid", "pending", "unpaid"]).optional(),
+  paymentGroup: z.enum(["paid", "pending", "partial", "problem", "unclassified"]).optional(),
   assignee: z.string().optional(),
   company: z.string().optional(),
   dateFrom: z.string().optional(),

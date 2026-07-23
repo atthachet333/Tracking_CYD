@@ -95,6 +95,7 @@ export function mapDocuments(values: string[][], sheetTitle: string): DocMapResu
       detail: cell(row, columnMap, "detail"),
       paymentStatus,
       paymentGroup: classifyPayment(paymentStatus),
+      caseStatus: actualStatus,
       actualStatus,
       statusGroup: classifyStatus(actualStatus),
       latestFollowUp: followUp3 || followUp2 || followUp1,

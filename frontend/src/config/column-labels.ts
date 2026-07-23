@@ -20,6 +20,7 @@ export const COLUMN_LABELS = {
   followUp2: "ติดตามรอบ 2",
   followUp3: "ติดตามรอบ 3",
   customerStatus: "สถานะลูกค้า",
+  caseStatus: "สถานะเคส",
   depositStatus: "สถานะมัดจำ",
   contractDraftStatus: "สถานะร่างสัญญา",
   contractLink: "ลิงก์สัญญา",

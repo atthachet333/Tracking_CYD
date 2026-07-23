@@ -454,9 +454,9 @@ export interface AdminCompaniesResponse {
    ============================================================ */
 
 export type WorkloadLevel = "idle" | "normal" | "moderate" | "high" | "critical";
-export type PaymentGroup = "paid" | "pending" | "unpaid";
+export type PaymentGroup = "paid" | "pending" | "partial" | "problem" | "unclassified";
 
-/** หนึ่งงานเอกสาร (map จาก header จริงในแท็บ DOCUMENTS) */
+/** หนึ่งงานเอกสาร (map จาก header จริงในแท็บ DOCUMENTS — 7 คอลัมน์ธุรกิจ) */
 export interface DocumentTaskItem {
   workDate: string | null;
   caseNo: string;
@@ -465,7 +465,8 @@ export interface DocumentTaskItem {
   detail: string;           // รายละเอียดเบื้องต้น
   paymentStatus: string;    // ค่าดิบ "สถานะการชำระ"
   paymentGroup: PaymentGroup;
-  actualStatus: string;     // ค่าดิบสถานะ/ขั้นตอนล่าสุด (สถานะงาน)
+  caseStatus: string;       // ค่าดิบ "สถานะเคส"
+  actualStatus: string;     // = caseStatus (คงไว้เพื่อ compatibility)
   statusGroup: CustomerStatusGroup;
   latestFollowUp: string;
   quotationLink: string;

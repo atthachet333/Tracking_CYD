@@ -9,9 +9,11 @@ describe("classifyPayment (สถานะการชำระ — ค่าม
   it("รอชำระ... → pending", () => {
     expect(classifyPayment("รอชำระค่าตีวีซ่า 23/07/26")).toBe("pending");
   });
-  it("ว่าง/ไม่รู้จัก → unpaid", () => {
-    expect(classifyPayment("")).toBe("unpaid");
-    expect(classifyPayment("อื่น ๆ")).toBe("unpaid");
+  it("ว่าง/ไม่รู้จัก → unclassified; ชำระบางส่วน → partial; ยกเลิก → problem", () => {
+    expect(classifyPayment("")).toBe("unclassified");
+    expect(classifyPayment("อื่น ๆ")).toBe("unclassified");
+    expect(classifyPayment("ชำระบางส่วน 3 คน")).toBe("partial");
+    expect(classifyPayment("ยกเลิก")).toBe("problem");
   });
 });
 

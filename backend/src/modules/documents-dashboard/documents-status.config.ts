@@ -91,21 +91,32 @@ export function normalizeAssignee(raw: string): string {
    - ค่าจริงมักมีข้อความ/ตัวเลขต่อท้าย (เช่น "ชำระแล้ว 7", "รอชำระค่าตีวีซ่า 23/07/26")
    - จำแนกด้วย keyword ที่ต้นข้อความ (ไม่กว้างเกินไป)
    ============================================================ */
-export type PaymentGroup = "paid" | "pending" | "unpaid";
+export type PaymentGroup = "paid" | "pending" | "partial" | "problem" | "unclassified";
 
 export const PAYMENT_LABELS: Record<PaymentGroup, string> = {
   paid: "ชำระแล้ว",
   pending: "รอชำระ",
-  unpaid: "ยังไม่ระบุ",
+  partial: "ชำระบางส่วน",
+  problem: "มีปัญหา",
+  unclassified: "ยังไม่ระบุ",
 };
 
+// ตรวจ partial/problem ก่อน paid/pending (คำเฉพาะเจาะจงมาก่อน)
+const PARTIAL_KEYWORDS = ["ชำระบางส่วน", "จ่ายบางส่วน", "มัดจำ", "partial"];
+const PROBLEM_KEYWORDS = ["ยกเลิก", "ปฏิเสธ", "มีปัญหา", "ค้างชำระ", "เกินกำหนด", "problem", "failed"];
 const PAID_KEYWORDS = ["ชำระแล้ว", "ชำระเรียบร้อย", "เรียบร้อยแล้ว", "จ่ายแล้ว", "paid"];
-const PENDING_KEYWORDS = ["รอชำระ", "ค้างชำระ", "ยังไม่ชำระ", "ยังไม่ได้ชำระ", "pending", "รอโอน"];
+const PENDING_KEYWORDS = ["รอชำระ", "ยังไม่ชำระ", "ยังไม่ได้ชำระ", "pending", "รอโอน"];
+
+function hasKeyword(norm: string, keywords: string[]): boolean {
+  return keywords.some((k) => { const n = normalizeStatus(k); return norm.startsWith(n) || norm.includes(n); });
+}
 
 export function classifyPayment(raw: string): PaymentGroup {
   const norm = normalizeStatus(raw);
-  if (!norm) return "unpaid";
-  if (PAID_KEYWORDS.some((k) => norm.startsWith(normalizeStatus(k)) || norm.includes(normalizeStatus(k)))) return "paid";
-  if (PENDING_KEYWORDS.some((k) => norm.startsWith(normalizeStatus(k)) || norm.includes(normalizeStatus(k)))) return "pending";
-  return "unpaid";
+  if (!norm) return "unclassified";
+  if (hasKeyword(norm, PARTIAL_KEYWORDS)) return "partial";
+  if (hasKeyword(norm, PROBLEM_KEYWORDS)) return "problem";
+  if (hasKeyword(norm, PAID_KEYWORDS)) return "paid";
+  if (hasKeyword(norm, PENDING_KEYWORDS)) return "pending";
+  return "unclassified";
 }

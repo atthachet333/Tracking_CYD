@@ -12,6 +12,7 @@ const admin: CustomerCaseItem = {
 const doc: DocumentTaskItem = {
   workDate: "08/06/2026", caseNo: "D-1", company: "Beta", assignee: "พี่แอน", detail: "งานเอกสาร",
   paymentStatus: "ชำระแล้ว 7", paymentGroup: "paid",
+  caseStatus: "ดำเนินการเรียบร้อย",
   actualStatus: "ดำเนินการเรียบร้อย", statusGroup: "completed", latestFollowUp: "",
   quotationLink: "", contractLink: "https://c/9", sourceSheet: "DOCUMENTS", sourceRow: 3,
 };

@@ -1,6 +1,7 @@
 import { Menu, Search, Sun, Moon, Maximize, Bell, Calendar } from "lucide-react";
 import { useUiStore } from "@/stores/uiStore";
 import { useNotifications } from "@/hooks/useApi";
+import { CURRENT_USER } from "@/config/current-user";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -71,10 +72,10 @@ export function Header() {
 
       <div className="flex items-center gap-2.5 rounded-xl py-0.5 pl-1 pr-1.5">
         <div className="hidden text-right leading-tight md:block">
-          <div className="text-[13px] font-semibold">Administrator</div>
-          <div className="text-[11px] text-white/80">ผู้ดูแลระบบ</div>
+          <div className="text-[13px] font-semibold">{CURRENT_USER.displayName}</div>
+          <div className="text-[11px] text-white/80">{CURRENT_USER.roleLabel}</div>
         </div>
-        <img src="https://i.pravatar.cc/80?img=12" alt="ผู้ใช้" className="h-9 w-9 rounded-xl border-2 border-white/30 object-cover" />
+        <img src={CURRENT_USER.avatarUrl} alt={CURRENT_USER.displayName} className="h-9 w-9 rounded-xl border-2 border-white/30 object-cover" />
       </div>
     </header>
   );

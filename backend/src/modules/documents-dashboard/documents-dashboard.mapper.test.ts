@@ -45,4 +45,32 @@ describe("mapDocuments", () => {
     expect(r.items).toHaveLength(0);
     expect(r.warnings.length).toBeGreaterThan(0);
   });
+
+  it("โครงสร้าง 7 คอลัมน์จริง: map สถานะการชำระ + สถานะเคส แยกกัน", () => {
+    const H7 = ["วันที่", "รหัสเคส", "ผู้รับผิดชอบ", "ชื่อบริษัท", "รายละเอียดเบื้องต้น", "สถานะการชำระ", "สถานะเคส"];
+    const v: string[][] = [
+      H7,
+      ["08/06/2026", "D-1", "พี่แอน", "บ.A", "รายละเอียดยาว ๆ ของงานเอกสาร", "ชำระแล้ว 7", "ดำเนินการเรียบร้อย"],
+      ["10/06/2026", "D-2", "สนุ๊ก", "บ.B", "รายละเอียด 2", "รอชำระค่าตีวีซ่า 23/07", "กำลังดำเนินการ"],
+      ["12/06/2026", "D-3", "พี่อัง", "บ.C", "รายละเอียด 3", "", ""],
+    ];
+    const r = mapDocuments(v, "DOCUMENTS");
+    expect(r.items).toHaveLength(3);
+    expect(r.mapping.paymentStatus).toBe("สถานะการชำระ");
+    expect(r.mapping.status).toBe("สถานะเคส"); // caseStatus มาจาก "สถานะเคส"
+
+    const d1 = r.items.find((i) => i.caseNo === "D-1")!;
+    expect(d1.caseStatus).toBe("ดำเนินการเรียบร้อย");
+    expect(d1.statusGroup).toBe("completed");
+    expect(d1.paymentStatus).toBe("ชำระแล้ว 7");
+    expect(d1.paymentGroup).toBe("paid");
+
+    const d2 = r.items.find((i) => i.caseNo === "D-2")!;
+    expect(d2.statusGroup).toBe("in_progress");
+    expect(d2.paymentGroup).toBe("pending");
+
+    const d3 = r.items.find((i) => i.caseNo === "D-3")!;
+    expect(d3.statusGroup).toBe("unclassified");
+    expect(d3.paymentGroup).toBe("unclassified");
+  });
 });

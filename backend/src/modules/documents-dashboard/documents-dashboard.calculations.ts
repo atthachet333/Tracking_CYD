@@ -9,7 +9,7 @@ import type {
 import { GROUP_LABELS, GROUP_ORDER, PAYMENT_LABELS } from "./documents-status.config";
 import { workloadLevel } from "./documents-dashboard.types";
 
-const PAYMENT_ORDER: PaymentGroup[] = ["paid", "pending", "unpaid"];
+const PAYMENT_ORDER: PaymentGroup[] = ["paid", "pending", "partial", "problem", "unclassified"];
 
 function pct(part: number, total: number): number {
   if (total <= 0) return 0;

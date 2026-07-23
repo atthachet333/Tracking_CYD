@@ -166,7 +166,7 @@ export function UnifiedTasksTable() {
                       <button onClick={() => setDetail(r)} className="max-w-[220px] truncate text-left font-semibold text-brand-600 hover:underline" title={r.companyName}>{r.companyName || "—"}</button>
                     </td>
                     <td className="px-2.5 py-2"><div className="flex items-center gap-1.5"><Avatar name={r.assignee || "?"} size={22} /><span>{r.assignee || "—"}</span></div></td>
-                    <td className="max-w-[240px] truncate px-2.5 py-2 text-muted" title={r.detail}>{r.detail || "—"}</td>
+                    <td className="px-2.5 py-2"><button onClick={() => setDetail(r)} className="line-clamp-2 max-w-[240px] text-left text-muted hover:text-ink dark:hover:text-slate-200" title={r.detail}>{r.detail || "—"}</button></td>
                     <td className="max-w-[160px] truncate px-2.5 py-2" title={r.paymentStatus ?? ""}>{r.paymentStatus || "—"}</td>
                     <td className="max-w-[140px] truncate px-2.5 py-2 text-muted" title={r.customerStatus ?? ""}>{r.customerStatus || "—"}</td>
                     <td className="px-2.5 py-2"><StatusChip raw={r.actualStatus} group={r.statusGroup} /></td>

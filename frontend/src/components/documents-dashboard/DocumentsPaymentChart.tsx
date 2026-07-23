@@ -3,9 +3,11 @@ import type { PaymentDistributionItem, PaymentGroup } from "@/types/documents-da
 import { EmptyState } from "@/components/ui/primitives";
 
 const PAYMENT_COLOR: Record<PaymentGroup, string> = {
-  paid: "#0EA5A4",     // เขียวอมฟ้า
-  pending: "#EAB308",  // เหลือง
-  unpaid: "#94A3B8",   // เทา
+  paid: "#0EA5A4",         // เขียวอมฟ้า
+  pending: "#EAB308",      // เหลือง
+  partial: "#F59E0B",      // ส้ม
+  problem: "#EF4444",      // แดง
+  unclassified: "#94A3B8", // เทา
 };
 
 const tooltipStyle = { borderRadius: 12, border: "1px solid rgba(148,163,184,.3)", fontSize: 13, fontFamily: "IBM Plex Sans Thai", background: "#0f1728", color: "#e2e8f0" };

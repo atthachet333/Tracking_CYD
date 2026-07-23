@@ -12,6 +12,7 @@ import { DocumentsWorkloadChart } from "@/components/documents-dashboard/Documen
 import { DocumentsAssigneesTable } from "@/components/documents-dashboard/DocumentsAssigneesTable";
 import { DocumentsCompaniesTable } from "@/components/documents-dashboard/DocumentsCompaniesTable";
 import { DocumentsRecentItems } from "@/components/documents-dashboard/DocumentsRecentItems";
+import { DocumentsItemsTable } from "@/components/documents-dashboard/DocumentsItemsTable";
 import { CustomerStatusDonut } from "@/components/customer-dashboard/CustomerStatusDonut";
 import { ActualStatusBarChart } from "@/components/customer-dashboard/ActualStatusBarChart";
 import { CustomerInsights } from "@/components/customer-dashboard/CustomerInsights";
@@ -109,6 +110,12 @@ export function DocumentsOverviewPage() {
           {assignees.isLoading ? <Skeleton className="h-56" /> : <DocumentsAssigneesTable data={assignees.data?.data ?? []} showPayment />}
         </Card>
       </div>
+
+      {/* ตารางหลัก — งานเอกสารครบ 7 คอลัมน์ */}
+      <Card className="mb-4 p-5">
+        <SectionTitle title="ตารางงานเอกสาร (7 คอลัมน์)" sub="ค้นหา/กรอง/เรียง/Export · คลิกดูรายละเอียดเต็ม" />
+        <DocumentsItemsTable />
+      </Card>
 
       {/* Companies */}
       <Card className="mb-4 p-5">

@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NAV } from "@/lib/nav";
+import { BRAND } from "@/config/brand";
 import { useUiStore } from "@/stores/uiStore";
 import { useNotifications } from "@/hooks/useApi";
 
@@ -28,14 +29,23 @@ export function Sidebar() {
         )}
       >
         {/* Brand */}
-        <div className="flex items-center gap-3 border-b border-line/70 px-5 py-4 dark:border-slate-800">
-          <div className="header-grad grid h-10 w-10 shrink-0 place-items-center rounded-xl font-num text-[15px] font-extrabold text-white shadow-lg">
-            CP
-          </div>
+        <div className={cn("flex items-center gap-3 border-b border-line/70 px-5 py-4 dark:border-slate-800", collapsed && "justify-center px-0")}>
+          <img
+            src={BRAND.logoPath}
+            alt={BRAND.logoAlt}
+            title={BRAND.name}
+            width={collapsed ? 36 : 42}
+            height={collapsed ? 36 : 42}
+            className={cn(
+              "shrink-0 rounded-xl bg-white object-contain p-0.5 shadow-sm ring-1 ring-line/60 dark:ring-slate-700",
+              collapsed ? "h-9 w-9" : "h-[42px] w-[42px]",
+            )}
+            style={{ aspectRatio: "1 / 1" }}
+          />
           {!collapsed && (
             <div className="overflow-hidden whitespace-nowrap">
-              <div className="text-[14px] font-bold leading-tight">CHAIYADET</div>
-              <div className="font-num text-[10px] tracking-widest text-muted">PROGRESS CO., LTD.</div>
+              <div className="text-[14px] font-bold leading-tight">{BRAND.shortName}</div>
+              <div className="font-num text-[10px] tracking-widest text-muted">{BRAND.companyNameUpper}</div>
             </div>
           )}
         </div>

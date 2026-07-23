@@ -7,7 +7,7 @@ import { api } from "@/services/api";
 
 const ROLES = [
   ["Super Admin", "จัดการระบบและสิทธิ์ทั้งหมด", "bg-danger/10 text-danger"],
-  ["Administrator", "จัดการข้อมูลส่วนใหญ่", "bg-brand-600/10 text-brand-600"],
+  ["ผู้ดูแลข้อมูล", "จัดการข้อมูลส่วนใหญ่", "bg-brand-600/10 text-brand-600"],
   ["Department Manager", "ดูข้อมูลของทีม", "bg-teal/10 text-teal"],
   ["Document Controller", "จัดการเอกสาร", "bg-purple/10 text-purple"],
   ["Staff", "ดูเฉพาะงานตัวเอง", "bg-warning/15 text-warning"],

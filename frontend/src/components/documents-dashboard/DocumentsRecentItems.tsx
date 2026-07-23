@@ -2,7 +2,7 @@ import type { DocumentTaskItem } from "@/types/documents-dashboard";
 import { EmptyState, Avatar } from "@/components/ui/primitives";
 import { StatusChip } from "@/components/customer-dashboard/StatusChip";
 
-const COLS = ["วันที่", "บริษัท", "ผู้รับผิดชอบ", "รายละเอียดเบื้องต้น", "สถานะการชำระ", "สถานะงาน"];
+const COLS = ["วันที่", "บริษัท", "ผู้รับผิดชอบ", "รายละเอียดเบื้องต้น", "สถานะการชำระ", "สถานะเคส"];
 
 export function DocumentsRecentItems({ items, limit = 15 }: { items: DocumentTaskItem[]; limit?: number }) {
   const rows = items.slice(0, limit);
@@ -26,9 +26,9 @@ export function DocumentsRecentItems({ items, limit = 15 }: { items: DocumentTas
                   <span>{it.assignee || "—"}</span>
                 </div>
               </td>
-              <td className="max-w-[280px] truncate px-3 py-2.5 text-muted" title={it.detail}>{it.detail || "—"}</td>
+              <td className="line-clamp-2 max-w-[280px] px-3 py-2.5 text-muted" title={it.detail}>{it.detail || "—"}</td>
               <td className="max-w-[160px] truncate px-3 py-2.5" title={it.paymentStatus}>{it.paymentStatus || "—"}</td>
-              <td className="px-3 py-2.5"><StatusChip raw={it.actualStatus} group={it.statusGroup} /></td>
+              <td className="px-3 py-2.5"><StatusChip raw={it.caseStatus} group={it.statusGroup} /></td>
             </tr>
           ))}
         </tbody>
